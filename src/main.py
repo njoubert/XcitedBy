@@ -17,7 +17,8 @@ class form_response_page:
         html = html + "<h3>" + str(len(papersSorted)) + " cited (directly or indirectly) \"" + papertitle + "\"</h3>"
         html = html + "<table>"
         for t,a in papersSorted:
-            html = html + "<tr><td><a href='" + a['url_citations'] + "'> "+ str(a['num_citations']) + " Citations</a></td><td>" + a['year'] + "</td><td><a href='"+a['url']+"'>" + t + "</a></td></tr>"
+            year = a['year'] if a['year'] else "-"
+            html = html + "<tr><td><a href='" + a['url_citations'] + "'> "+ str(a['num_citations']) + " Citations</a></td><td>" + year + "</td><td><a href='"+a['url']+"'>" + t + "</a></td></tr>"
         html = html + "</table></body></html>"
         return html
 
