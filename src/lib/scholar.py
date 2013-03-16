@@ -308,6 +308,17 @@ class ScholarQuerier():
         html = hdl.read()
         self.parse(html)
 
+    def direct(self, url):
+        """
+        This method initiates a query with subsequent parsing of the
+        response.
+        """
+        req = urllib2.Request(url=url,
+                              headers={'User-Agent': self.UA})
+        hdl = urllib2.urlopen(req)
+        html = hdl.read()
+        self.parse(html)
+
     def parse(self, html):
         """
         This method allows parsing of existing HTML content.
@@ -358,6 +369,15 @@ def titles(author):
       titles.append(article['title'])
     return titles
 
+def direct(url, author, count):
+    querier = ScholarQuerier()
+    querier.direct(url)
+    articles = querier.articles
+    if count > 0:
+        articles = articles[:count]
+    for art in articles:
+        print art.as_txt() + '\n'   
+
 def main():
     usage = """scholar.py [options] <query string>
 A command-line interface to Google Scholar."""
@@ -375,6 +395,8 @@ A command-line interface to Google Scholar."""
                       help='Print article data in text format')
     parser.add_option('-c', '--count', type='int',
                       help='Maximum number of results')
+    parser.add_option('--direct', action='store_true',
+                      help='Treat the query string as a direct url')
     parser.set_defaults(count=0, author='')
     options, args = parser.parse_args()
 
@@ -388,6 +410,8 @@ A command-line interface to Google Scholar."""
         csv(query, author=options.author, count=options.count)
     elif options.csv_header:
         csv(query, author=options.author, count=options.count, header=True)
+    elif options.direct:
+        direct(query, author=options.author, count=options.count)
     else:
         txt(query, author=options.author, count=options.count)
 
