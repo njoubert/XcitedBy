@@ -317,6 +317,7 @@ class ScholarQuerier():
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
         html = hdl.read()
+        #print html
         self.parse(html)
 
     def parse(self, html):
@@ -378,6 +379,17 @@ def direct(url, author, count):
     for art in articles:
         print art.as_txt() + '\n'   
 
+def direct_csv(url, author, count):
+    querier = ScholarQuerier()
+    querier.direct(url)
+    articles = querier.articles
+    if count > 0:
+        articles = articles[:count]
+    for art in articles:
+        result = art.as_csv(header=False, sep=",")
+        print result.encode('utf-8')
+
+
 def main():
     usage = """scholar.py [options] <query string>
 A command-line interface to Google Scholar."""
@@ -397,6 +409,8 @@ A command-line interface to Google Scholar."""
                       help='Maximum number of results')
     parser.add_option('--direct', action='store_true',
                       help='Treat the query string as a direct url')
+    parser.add_option('--direct-csv', action='store_true',
+                      help='Treat the query string as a direct url printing as csv')
     parser.set_defaults(count=0, author='')
     options, args = parser.parse_args()
 
@@ -412,6 +426,8 @@ A command-line interface to Google Scholar."""
         csv(query, author=options.author, count=options.count, header=True)
     elif options.direct:
         direct(query, author=options.author, count=options.count)
+    elif options.direct_csv:
+        direct_csv(query, author=options.author, count=options.count)
     else:
         txt(query, author=options.author, count=options.count)
 
