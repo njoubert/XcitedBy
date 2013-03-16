@@ -1,46 +1,42 @@
+import cherrypy
 
-import scholar
-
-
-
-def main():
-
-    papertitle = "Liszt: a domain specific language for building portable mesh-based PDE solvers"
-    papernr = "11546469924168842438"
+import dataCollector
 
 
-    papers = scholar.papers_by_title(papertitle)
+class form_response_page:
 
-    print "Found paper:"
-    print "  ", papers[0]['title'], papers[0]['papernumber']
-    print "  ", "with", papers[0]['num_citations'], "citations"
+    @cherrypy.expose
+    def index(self, *args, **kwargs):
+        papertitle = kwargs['paper_name']
+        papersDict = dataCollector.getAllPapers(papertitle)
 
-    # allStuff = scholar.citations_by_papernr(papernr);
-    # print "I downloaded", len(allStuff), "papers"
-    # for al in allStuff:
-    # 	print al.as_txt();
+        papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1]['num_citations'], reverse=True)
 
-    allPapers = dict()
+        html = "<html><head></head><body>"
+        html = html + "<h1>Citation Search Results</h1>"
+        html = html + "<h3>" + str(len(papersSorted)) + " papers came after " + papertitle + "</h3>"
+        html = html + "<table>"
+        for t,a in papersSorted:
+            html = html + "<tr><td>"+ str(a['num_citations']) + " Citations</td><td><a href='"+a['url']+"'>" + t + "</a></td></tr>"
+        html = html + "</table></body></html>"
+        return html
 
-    toCheckPapers = [papers[0]];
-    while (len(toCheckPapers) > 0):
-    	paper = toCheckPapers.pop(0)
-        title = paper['title']
-        if (paper['title'] in allPapers):
-            continue
-        allPapers[paper['title']] = paper;
+class root_page:
 
-        if (paper['papernumber']):
-            newCitations = scholar.citations_by_papernr(paper['papernumber'])
-            for art in newCitations:
-                if (not (art['title'] in allPapers)):
-                    toCheckPapers.append(art)
-
+    form_response = form_response_page()
     
-    print "Found citations for first paper:", len(allPapers)
-    for key in allPapers:
-    	print key
+    @cherrypy.expose
+    def index(self):
+        html = \
+'''
+<form action="/form_response/" method="POST">
+    Enter the name of the paper here:
+    <input type="textbox" name="paper_name" />
+    <input type="submit">
+</form>
+'''
+        return html
 
 
-if __name__ == "__main__":
-    main()
+
+cherrypy.quickstart(root_page())
