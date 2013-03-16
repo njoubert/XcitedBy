@@ -1,13 +1,14 @@
-#! /usr/bin/env python
 """
 This module provides classes for querying Google Scholar and parsing
-returned results.  It currently *only* processes the first results
-page.  It is not a recursive crawler.
+returned results.  
 """
 # Version: 1.5 -- $Date: 2012-09-27 10:44:39 -0700 (Thu, 27 Sep 2012) $
 #
 # ChangeLog
 # ---------
+#
+# 1.6:  It is now a recursive crawler for citations.
+#
 #
 # 1.5:  A few changes:
 #
@@ -66,6 +67,10 @@ import urllib
 import urllib2
 from BeautifulSoup import BeautifulSoup
 
+
+CITATION_REGEX = '.*\?cites=(\d*).*'
+
+
 class Article():
     """
     A class representing articles listed on Google Scholar.  The class
@@ -78,7 +83,8 @@ class Article():
                       'num_versions':  [0,    'Versions',       3],
                       'url_citations': [None, 'Citations list', 4],
                       'url_versions':  [None, 'Versions list',  5],
-                      'year':          [None, 'Year',           6]}
+                      'year':          [None, 'Year',           6],
+                      'papernumber':   [None, 'Paper Number',   7]}
 
     def __getitem__(self, key):
         if key in self.attrs:
@@ -182,6 +188,8 @@ class ScholarParser():
                     self.article['num_citations'] = \
                         self._as_int(tag.string.split()[-1])
                 self.article['url_citations'] = self._path2url(tag.get('href'))
+                a = re.match(CITATION_REGEX, self.article['url_citations'])
+                self.article['papernumber'] = a.group(1)
 
             if tag.get('href').startswith('/scholar?cluster'):
                 if hasattr(tag, 'string') and tag.string.startswith('All '):
@@ -275,6 +283,8 @@ class ScholarQuerier():
     SCHOLAR_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s+author:%(author)s&btnG=Search&as_subj=eng&as_sdt=1,5&as_ylo=&as_vis=0'
     NOAUTH_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s&btnG=Search&as_subj=eng&as_std=1,5&as_ylo=&as_vis=0'
     CITATION_URL = 'http://scholar.google.com/scholar?start=%(start)s&hl=en&as_sdt=0,5&sciodt=0,5&cites=%(papernr)s&scipsc='
+    TITLE_URL = 'http://scholar.google.com/scholar?q=allintitle:+%(title)s'
+
 
     """
     Older URLs:
@@ -317,11 +327,25 @@ class ScholarQuerier():
         html = hdl.read()
         self.parse(html)
 
+    def title(self, search):
+        """
+        This method initiates an allintitle search with subsequent parsing of the
+        response.
+        """
+        url = self.TITLE_URL % {'title': urllib.quote(search.encode('utf-8'))}
+        print url
+        req = urllib2.Request(url=url,
+                              headers={'User-Agent': self.UA})
+        hdl = urllib2.urlopen(req)
+        html = hdl.read()
+        return self.parse(html)
+
     def citation(self, citation, page):
         """
         This method initiates a single query to the citation list of a paper
         """
         url = self.CITATION_URL % {'start': page*10, 'papernr': urllib.quote(citation)}
+        print url
         req = urllib2.Request(url=url,
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
@@ -355,119 +379,132 @@ class ScholarQuerier():
 
 
 
-def txt(query, author, count):
-    querier = ScholarQuerier(author=author, count=count)
-    querier.query(query)
-    articles = querier.articles
-    if count > 0:
-        articles = articles[:count]
-    for art in articles:
-        print art.as_txt() + '\n'
-
-def csv(query, author, count, header=False, sep='|'):
-    querier = ScholarQuerier(author=author, count=count)
-    querier.query(query)
-    articles = querier.articles
-    if count > 0:
-        articles = articles[:count]
-    for art in articles:
-        result = art.as_csv(header=header, sep=sep)
-        print result.encode('utf-8')
-        header = False
-
-def url(title, author):
-    querier = ScholarQuerier(author=author)
-    querier.query(title)
-    articles = querier.articles
-    for article in articles:
-        if "".join(title.lower().split()) == "".join(article['title'].lower().split()):
-            return article['url'], article['year']
-    return None, None
-
-def titles(author):
-    querier = ScholarQuerier(author=author)
-    querier.query('')
-    articles = querier.articles
-    titles = []
-    for article in articles:
-      titles.append(article['title'])
-    return titles
-
-def direct(url, author, count):
+def papers_by_title(title):
     querier = ScholarQuerier()
-    querier.direct(url)
-    articles = querier.articles
-    if count > 0:
-        articles = articles[:count]
-    for art in articles:
-        print art.as_txt() + '\n'   
+    querier.title(title)
+    return querier.articles
 
-def direct_csv(url, author, count):
-    querier = ScholarQuerier()
-    querier.direct(url)
-    articles = querier.articles
-    if count > 0:
-        articles = articles[:count]
-    for art in articles:
-        result = art.as_csv(header=False, sep=",")
-        print result.encode('utf-8')
 
-def citation(papernr):
+def citations_by_papernr(papernr):
     querier = ScholarQuerier()
     i = 0
     while (querier.citation(papernr,i)):
-        articles = querier.articles
-        for art in articles:
-            result = art.as_csv(header=False, sep=",")
-            print result.encode('utf-8')
         i += 1
+    return querier.articles
+
+# def txt(query, author, count):
+#     querier = ScholarQuerier(author=author, count=count)
+#     querier.query(query)
+#     articles = querier.articles
+#     if count > 0:
+#         articles = articles[:count]
+#     for art in articles:
+#         print art.as_txt() + '\n'
+
+# def csv(query, author, count, header=False, sep='|'):
+#     querier = ScholarQuerier(author=author, count=count)
+#     querier.query(query)
+#     articles = querier.articles
+#     if count > 0:
+#         articles = articles[:count]
+#     for art in articles:
+#         result = art.as_csv(header=header, sep=sep)
+#         print result.encode('utf-8')
+#         header = False
+
+# def url(title, author):
+#     querier = ScholarQuerier(author=author)
+#     querier.query(title)
+#     articles = querier.articles
+#     for article in articles:
+#         if "".join(title.lower().split()) == "".join(article['title'].lower().split()):
+#             return article['url'], article['year']
+#     return None, None
+
+# def titles(author):
+#     querier = ScholarQuerier(author=author)
+#     querier.query('')
+#     articles = querier.articles
+#     titles = []
+#     for article in articles:
+#       titles.append(article['title'])
+#     return titles
+
+# def direct(url, author, count):
+#     querier = ScholarQuerier()
+#     querier.direct(url)
+#     articles = querier.articles
+#     if count > 0:
+#         articles = articles[:count]
+#     for art in articles:
+#         print art.as_txt() + '\n'   
+
+# def direct_csv(url, author, count):
+#     querier = ScholarQuerier()
+#     querier.direct(url)
+#     articles = querier.articles
+#     if count > 0:
+#         articles = articles[:count]
+#     for art in articles:
+#         result = art.as_csv(header=False, sep=",")
+#         print result.encode('utf-8')
+
+# def citation(papernr):
+#     querier = ScholarQuerier()
+#     i = 0
+#     while (querier.citation(papernr,i)):
+#         articles = querier.articles
+#         for art in articles:
+#             result = art.as_csv(header=False, sep=",")
+#             print result.encode('utf-8')
+#         i += 1
 
 
-def main():
-    usage = """scholar.py [options] <query string>
-A command-line interface to Google Scholar."""
+# def main():
+#     usage = """scholar.py [options] <query string>
+# A command-line interface to Google Scholar."""
 
-    fmt = optparse.IndentedHelpFormatter(max_help_position=50,
-                                         width=100)
-    parser = optparse.OptionParser(usage=usage, formatter=fmt)
-    parser.add_option('-a', '--author',
-                      help='Author name')
-    parser.add_option('--csv', action='store_true',
-                      help='Print article data in CSV format (separator is "|")')
-    parser.add_option('--csv-header', action='store_true',
-                      help='Like --csv, but print header line with column names')
-    parser.add_option('--txt', action='store_true',
-                      help='Print article data in text format')
-    parser.add_option('-c', '--count', type='int',
-                      help='Maximum number of results')
-    parser.add_option('--direct', action='store_true',
-                      help='Treat the query string as a direct url')
-    parser.add_option('--direct-csv', action='store_true',
-                      help='Treat the query string as a direct url printing as csv')
-    parser.add_option('--citation', action='store_true',
-                      help='Treat the query string as paper number and get the citations')
+#     fmt = optparse.IndentedHelpFormatter(max_help_position=50,
+#                                          width=100)
+#     parser = optparse.OptionParser(usage=usage, formatter=fmt)
+#     parser.add_option('-a', '--author',
+#                       help='Author name')
+#     parser.add_option('--csv', action='store_true',
+#                       help='Print article data in CSV format (separator is "|")')
+#     parser.add_option('--csv-header', action='store_true',
+#                       help='Like --csv, but print header line with column names')
+#     parser.add_option('--txt', action='store_true',
+#                       help='Print article data in text format')
+#     parser.add_option('-c', '--count', type='int',
+#                       help='Maximum number of results')
+#     parser.add_option('--direct', action='store_true',
+#                       help='Treat the query string as a direct url')
+#     parser.add_option('--direct-csv', action='store_true',
+#                       help='Treat the query string as a direct url printing as csv')
+#     parser.add_option('--citation', action='store_true',
+#                       help='Treat the query string as paper number and get the citations')
 
-    parser.set_defaults(count=0, author='')
-    options, args = parser.parse_args()
+#     parser.set_defaults(count=0, author='')
+#     options, args = parser.parse_args()
 
-    if len(args) == 0:
-        print 'Hrrrm. I  need a query string.'
-        sys.exit(1)
+#     if len(args) == 0:
+#         print 'Hrrrm. I  need a query string.'
+#         sys.exit(1)
 
-    query = ' '.join(args)
+#     query = ' '.join(args)
 
-    if options.csv:
-        csv(query, author=options.author, count=options.count)
-    elif options.csv_header:
-        csv(query, author=options.author, count=options.count, header=True)
-    elif options.direct:
-        direct(query, author=options.author, count=options.count)
-    elif options.direct_csv:
-        direct_csv(query, author=options.author, count=options.count)
-    elif options.citation:
-        citation(query)
-    else:
-        txt(query, author=options.author, count=options.count)
+#     if options.csv:
+#         csv(query, author=options.author, count=options.count)
+#     elif options.csv_header:
+#         csv(query, author=options.author, count=options.count, header=True)
+#     elif options.direct:
+#         direct(query, author=options.author, count=options.count)
+#     elif options.direct_csv:
+#         direct_csv(query, author=options.author, count=options.count)
+#     elif options.citation:
+#         citation(query)
+#     else:
+#         txt(query, author=options.author, count=options.count)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
