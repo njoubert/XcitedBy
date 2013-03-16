@@ -20,36 +20,26 @@ def main():
     # for al in allStuff:
     # 	print al.as_txt();
 
+    allPapers = dict()
 
+    toCheckPapers = [papers[0]];
+    while (len(toCheckPapers) > 0):
+    	paper = toCheckPapers.pop(0)
+        title = paper['title']
+        if (paper['title'] in allPapers):
+            continue
+        allPapers[paper['title']] = paper;
 
-
-
-    allCitations = {};
-    toCheckCitations = [papers[0]];
-    while (len(toCheckCitations) > 0):
-    	paper = toCheckCitations.pop(0)
-    	if (not paper['papernumber']):
-    		print 'Missing a papernumber on', paper['title']
-    		
-    		continue
-    	newCitations = scholar.citations_by_papernr(paper['papernumber'])
-    	for art in newCitations:
-    		already = False
-    		for knownArt in allCitations:
-    			if (art['papernumber'] is knownArt['papernumber']):
-    				print "papertitle"
-    				already = True
-    		if (not already):
-    			allCitations.append(art)
-    			toCheckCitations.append(art)
-
-
-
+        if (paper['papernumber']):
+            newCitations = scholar.citations_by_papernr(paper['papernumber'])
+            for art in newCitations:
+                if (not (art['title'] in allPapers)):
+                    toCheckPapers.append(art)
 
     
-    print "Found citations for first paper:", len(allCitations)
-    for c in allCitations:
-    	print c['papernumber'], c['title']
+    print "Found citations for first paper:", len(allPapers)
+    for key in allPapers:
+    	print key
 
 
 if __name__ == "__main__":
