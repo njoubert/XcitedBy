@@ -390,7 +390,7 @@ def citations_by_papernr(papernr):
     querier = ScholarQuerier()
     i = 0
     while (querier.citation(papernr,i)):
-        time.sleep(5)
+        time.sleep(1)
         i += 1
     return querier.articles
 
