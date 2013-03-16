@@ -24,7 +24,7 @@ class form_response_page:
             url_citations = a['url_citations'] if a['url_citations'] else "#"
             num_citations = str(a['num_citations']) if a['num_citations'] else "0"
             url = a['url'] if a['url'] else "#"
-            html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + depth + " Deep</td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
+            html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + str(depth) + " Deep</td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
         html = html + "</table></body></html>"
         return html
 
