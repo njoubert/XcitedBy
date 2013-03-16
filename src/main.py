@@ -19,7 +19,7 @@ def main():
     paperNumber = papers[0]['papernumber']
 
     while (True):
-    	newCitations = scholar.citations_by_papernr(papern)
+    	newCitations = scholar.citations_by_papernr(paperNumber)
 
 
     
