@@ -21,22 +21,27 @@ def main():
     # 	print al.as_txt();
 
 
-    allCitations = [];
+
+
+
+    allCitations = {};
     toCheckCitations = [papers[0]];
     while (len(toCheckCitations) > 0):
     	paper = toCheckCitations.pop(0)
     	if (not paper['papernumber']):
     		print 'Missing a papernumber on', paper['title']
+    		
     		continue
     	newCitations = scholar.citations_by_papernr(paper['papernumber'])
     	for art in newCitations:
     		already = False
     		for knownArt in allCitations:
     			if (art['papernumber'] is knownArt['papernumber']):
+    				print "papertitle"
     				already = True
     		if (not already):
     			allCitations.append(art)
-    			#toCheckCitations.append(art)
+    			toCheckCitations.append(art)
 
 
 
@@ -44,7 +49,7 @@ def main():
     
     print "Found citations for first paper:", len(allCitations)
     for c in allCitations:
-    	print c.as_txt();
+    	print c['papernumber'], c['title']
 
 
 if __name__ == "__main__":
