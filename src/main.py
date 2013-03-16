@@ -10,18 +10,21 @@ class form_response_page:
         papertitle = kwargs['paper_name']
         papersDict = dataCollector.getAllPapers(papertitle)
 
-        papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1]['num_citations'], reverse=True)
+        papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1][0]['num_citations'], reverse=True)
+
+
 
         html = "<html><head></head><body>"
         html = html + "<h1>Citation Search Results</h1>"
         html = html + "<h3>" + str(len(papersSorted)) + " papers cited (directly or indirectly) \"" + papertitle + "\"</h3>"
         html = html + "<table>"
-        for t,a in papersSorted:
+        for t,pair in papersSorted:
+            a, depth = pair
             year = str(a['year']) if a['year'] else "-"
             url_citations = a['url_citations'] if a['url_citations'] else "#"
             num_citations = str(a['num_citations']) if a['num_citations'] else "0"
             url = a['url'] if a['url'] else "#"
-            html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
+            html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + depth + " Deep</td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
         html = html + "</table></body></html>"
         return html
 

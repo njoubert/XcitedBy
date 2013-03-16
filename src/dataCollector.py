@@ -15,18 +15,18 @@ def getAllPapers(papertitle):
 
     allPapers = dict()
 
-    toCheckPapers = [papers[0]];
+    toCheckPapers = [(papers[0],0)];
     while (len(toCheckPapers) > 0):
-        paper = toCheckPapers.pop(0)
+        paper, depth = toCheckPapers.pop(0)
         if (paper['title'] in allPapers):
             continue
-        allPapers[paper['title']] = paper;
+        allPapers[paper['title']] = (paper, depth);
 
         if (paper['papernumber']):
             newCitations = scholar.citations_by_papernr(paper['papernumber'])
             for art in newCitations:
                 if (not (art['title'] in allPapers)):
-                    toCheckPapers.append(art)
+                    toCheckPapers.append((art,depth+1))
 
     return allPapers
 
