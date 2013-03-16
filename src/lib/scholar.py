@@ -132,14 +132,20 @@ class ScholarParser():
         """
         In this base class, the callback does nothing.
         """
+        return True
 
     def parse(self, html):
         """
         This method initiates parsing of HTML content.
         """
         self.soup = BeautifulSoup(html)
+        foundSome = False;
         for div in self.soup.findAll(ScholarParser._tag_checker):
-            self._parse_article(div)
+            found = self._parse_article(div)
+            if (found and not foundSome):
+                foundSome = True
+        return foundSome
+
 
     def _parse_article(self, div):
         self.article = Article()
@@ -161,7 +167,8 @@ class ScholarParser():
                         self._parse_links(tag2)
 
         if self.article['title']:
-            self.handle_article(self.article)
+            return self.handle_article(self.article)
+        return False
 
     def _parse_links(self, span):
         for tag in span:
@@ -226,7 +233,8 @@ class ScholarParser120201(ScholarParser):
                 self._parse_links(tag)
 
         if self.article['title']:
-            self.handle_article(self.article)
+            return self.handle_article(self.article)
+        return False
 
 class ScholarParser120726(ScholarParser):
     """
@@ -254,8 +262,8 @@ class ScholarParser120726(ScholarParser):
                 self._parse_links(tag.find('div', {'class': 'gs_fl'}))
 
         if self.article['title']:
-            self.handle_article(self.article)
-
+            return self.handle_article(self.article)
+        return False
 
 class ScholarQuerier():
     """
@@ -266,6 +274,7 @@ class ScholarQuerier():
     """
     SCHOLAR_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s+author:%(author)s&btnG=Search&as_subj=eng&as_sdt=1,5&as_ylo=&as_vis=0'
     NOAUTH_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s&btnG=Search&as_subj=eng&as_std=1,5&as_ylo=&as_vis=0'
+    CITATION_URL = 'http://scholar.google.com/scholar?start=%(start)s&hl=en&as_sdt=0,5&sciodt=0,5&cites=%(papernr)s&scipsc='
 
     """
     Older URLs:
@@ -280,7 +289,7 @@ class ScholarQuerier():
             self.querier = querier
 
         def handle_article(self, art):
-            self.querier.add_article(art)
+            return self.querier.add_article(art)
 
     def __init__(self, author='', scholar_url=None, count=0):
         self.articles = []
@@ -308,11 +317,24 @@ class ScholarQuerier():
         html = hdl.read()
         self.parse(html)
 
+    def citation(self, citation, page):
+        """
+        This method initiates a single query to the citation list of a paper
+        """
+        url = self.CITATION_URL % {'start': page*10, 'papernr': urllib.quote(citation)}
+        req = urllib2.Request(url=url,
+                              headers={'User-Agent': self.UA})
+        hdl = urllib2.urlopen(req)
+        html = hdl.read()
+        return self.parse(html)
+
+
     def direct(self, url):
         """
         This method initiates a query with subsequent parsing of the
         response.
         """
+        #url = urllib.quote(url)
         req = urllib2.Request(url=url,
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
@@ -325,10 +347,11 @@ class ScholarQuerier():
         This method allows parsing of existing HTML content.
         """
         parser = self.Parser(self)
-        parser.parse(html)
+        return parser.parse(html)
 
     def add_article(self, art):
         self.articles.append(art)
+        return True
 
 
 
@@ -389,6 +412,16 @@ def direct_csv(url, author, count):
         result = art.as_csv(header=False, sep=",")
         print result.encode('utf-8')
 
+def citation(papernr):
+    querier = ScholarQuerier()
+    i = 0
+    while (querier.citation(papernr,i)):
+        articles = querier.articles
+        for art in articles:
+            result = art.as_csv(header=False, sep=",")
+            print result.encode('utf-8')
+        i += 1
+
 
 def main():
     usage = """scholar.py [options] <query string>
@@ -411,6 +444,9 @@ A command-line interface to Google Scholar."""
                       help='Treat the query string as a direct url')
     parser.add_option('--direct-csv', action='store_true',
                       help='Treat the query string as a direct url printing as csv')
+    parser.add_option('--citation', action='store_true',
+                      help='Treat the query string as paper number and get the citations')
+
     parser.set_defaults(count=0, author='')
     options, args = parser.parse_args()
 
@@ -428,6 +464,8 @@ A command-line interface to Google Scholar."""
         direct(query, author=options.author, count=options.count)
     elif options.direct_csv:
         direct_csv(query, author=options.author, count=options.count)
+    elif options.citation:
+        citation(query)
     else:
         txt(query, author=options.author, count=options.count)
 
