@@ -11,6 +11,11 @@ Also, notice the commit timestamps for this project - midnight through 7am.
 
 This is research-level code. Tread carefully.
 
+##TODO
+
+- Try to make Google return more than 10 results per page, so we don't have to scrape as many pages
+- Infer whether there is a next page from the current page, rather than blindly make a request for the next page until it runs out of content.
+
 ## Authors
 
 - Mike Roberts
