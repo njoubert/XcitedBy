@@ -65,6 +65,7 @@ import sys
 import re
 import urllib
 import urllib2
+import time
 from BeautifulSoup import BeautifulSoup
 
 
@@ -389,6 +390,7 @@ def citations_by_papernr(papernr):
     querier = ScholarQuerier()
     i = 0
     while (querier.citation(papernr,i)):
+        time.sleep(5)
         i += 1
     return querier.articles
 

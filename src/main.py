@@ -14,7 +14,7 @@ class form_response_page:
 
         html = "<html><head></head><body>"
         html = html + "<h1>Citation Search Results</h1>"
-        html = html + "<h3>" + str(len(papersSorted)) + " cited (directly or indirectly) \"" + papertitle + "\"</h3>"
+        html = html + "<h3>" + str(len(papersSorted)) + " papers cited (directly or indirectly) \"" + papertitle + "\"</h3>"
         html = html + "<table>"
         for t,a in papersSorted:
             year = str(a['year']) if a['year'] else "-"
