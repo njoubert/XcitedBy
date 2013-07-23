@@ -1,10 +1,7 @@
 
 
-$(document).ready(function() {
 
-
-
-	$("#submitbutton").click(function() {
+var submit = function() {
 
 		var rC = $("#resultsContainer");
 		var rB = $("#resultsBox");
@@ -25,7 +22,17 @@ $(document).ready(function() {
 		}, 2000);
 
 
+		return false;
 
-	})
+}
+
+
+$(document).ready(function() {
+
+
+
+	$("#submitbutton").click(submit);
+
+	$("#submitform").submit(submit);
 
 })
