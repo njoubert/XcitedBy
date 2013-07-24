@@ -66,6 +66,7 @@ import re
 import urllib
 import urllib2
 import time
+import random
 from BeautifulSoup import BeautifulSoup
 
 
@@ -152,7 +153,6 @@ class ScholarParser():
             if (found and not foundSome):
                 foundSome = True
         return foundSome
-
 
     def _parse_article(self, div):
         self.article = Article()
@@ -334,7 +334,6 @@ class ScholarQuerier():
         response.
         """
         url = self.TITLE_URL % {'title': urllib.quote(search.encode('utf-8'))}
-        print url
         req = urllib2.Request(url=url,
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
@@ -346,13 +345,11 @@ class ScholarQuerier():
         This method initiates a single query to the citation list of a paper
         """
         url = self.CITATION_URL % {'start': page*10, 'papernr': urllib.quote(citation)}
-        print url
         req = urllib2.Request(url=url,
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
         html = hdl.read()
         return self.parse(html)
-
 
     def direct(self, url):
         """
@@ -364,7 +361,6 @@ class ScholarQuerier():
                               headers={'User-Agent': self.UA})
         hdl = urllib2.urlopen(req)
         html = hdl.read()
-        #print html
         self.parse(html)
 
     def parse(self, html):
@@ -378,16 +374,11 @@ class ScholarQuerier():
         self.articles.append(art)
         return True
 
-
-
-def papers_by_title(title):
-    querier = ScholarQuerier()
+def papers_by_title(title, querier=ScholarQuerier()):
     querier.title(title)
     return querier.articles
 
-
-def citations_by_papernr(papernr):
-    querier = ScholarQuerier()
+def citations_by_papernr(papernr, querier=ScholarQuerier()):
     i = 0
     while (querier.citation(papernr,i)):
         time.sleep(1)

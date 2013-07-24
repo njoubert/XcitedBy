@@ -1,45 +1,37 @@
 
 import scholar
 
-def getAllPapers(papertitle):
-    papers = scholar.papers_by_title(papertitle)
+def getAllPapers(papertitle, querier=scholar.ScholarQuerier()):
+
+    papers = scholar.papers_by_title(papertitle, querier)
 
     print "Found paper:"
-    print "  ", papers[0]['title'], papers[0]['papernumber']
-    print "  ", "with", papers[0]['num_citations'], "citations"
-
-    # allStuff = scholar.citations_by_papernr(papernr);
-    # print "I downloaded", len(allStuff), "papers"
-    # for al in allStuff:
-    #   print al.as_txt();
+    print "  ", papers[0]["title"], "(", papers[0]["papernumber"], ")"
+    print "  ", "with", papers[0]["num_citations"], "citations"
+    print
 
     allPapers = dict()
 
-    toCheckPapers = [(papers[0],0)];
-    while (len(toCheckPapers) > 0):
-        paper, depth = toCheckPapers.pop(0)
-        if (paper['title'] in allPapers):
-            continue
-        allPapers[paper['title']] = (paper, depth);
+    toCheckPapers = [(papers[0],0)]
 
-        if (paper['papernumber']):
-            newCitations = scholar.citations_by_papernr(paper['papernumber'])
+    while (len(toCheckPapers) > 0):
+
+        paper, depth = toCheckPapers.pop(0)
+
+        if (paper["title"] in allPapers):
+            continue
+
+        allPapers[paper["title"]] = (paper, depth)
+
+        if (paper["papernumber"]):
+
+            print paper["title"]
+            print
+
+            newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
+
             for art in newCitations:
-                if (not (art['title'] in allPapers)):
+                if (not (art["title"] in allPapers)):
                     toCheckPapers.append((art,depth+1))
 
     return allPapers
-
-
-def main():
-
-    papertitle = "Liszt: a domain specific language for building portable mesh-based PDE solvers"
-    papernr = "11546469924168842438"
-    
-    print "Found citations for first paper:", len(allPapers)
-    for key in allPapers:
-    	print key
-
-
-if __name__ == "__main__":
-    main()

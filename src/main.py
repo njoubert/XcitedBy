@@ -1,6 +1,11 @@
 import cherrypy
 
+import scholar
+
+import proxyListGetter
+import proxyScholar
 import dataCollector
+
 
 
 class form_response_page:
@@ -8,11 +13,12 @@ class form_response_page:
     @cherrypy.expose
     def index(self, *args, **kwargs):
         papertitle = kwargs['paper_name']
-        papersDict = dataCollector.getAllPapers(papertitle)
+
+        proxies = proxyListGetter.getProxiesMyPrivateProxy()
+        querier = proxyScholar.ProxyScholarQuerier(proxies)
+        papersDict = dataCollector.getAllPapers(papertitle, querier)
 
         papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1][0]['num_citations'], reverse=True)
-
-
 
         html = "<html><head></head><body>"
         html = html + "<h1>Citation Search Results</h1>"
