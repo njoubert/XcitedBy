@@ -75,7 +75,7 @@ var submit = function() {
 		var titleToSearchFor = $("#input_title").val();
 
 		if (!titleToSearchFor) {
-			displayFSM.transitionToState('error', 'Please type in a paper title!');
+			displayFSM.transitionToState('error', {textStatus:"Please enter a paper title!", compact:true});
 			return false;
 		}
 
@@ -103,9 +103,9 @@ var submit = function() {
 			error: function(jqXHR, textStatus, errorThrown) {
 
 				if (jqXHR.statusCode().status == 404) {
-					displayFSM.transitionToState('error', textStatus, "The backend is currently offline");
+					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:"The backend is currently offline"});
 				} else {
-					displayFSM.transitionToState('error', textStatus, errorThrown);
+					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:errorThrown});
 
 				}
 
@@ -176,18 +176,26 @@ $(document).ready(function() {
 	});
 
 
-	displayFSM.insertNewState("error", displayContext, function(textStatus, errorThrown) {
+	displayFSM.insertNewState("error", displayContext, function(options) {
 		this.searchContainer.show();
 		this.resultsContainer.hide();
 		this.popOverContainer.hide();
 		
 		var errorText = "";
-		if (textStatus)
-			errorText += textStatus;
-		if (textStatus && errorThrown)
+		if (options.textStatus)
+			errorText += options.textStatus;
+		if (options.textStatus && options.errorThrown)
 			errorText += " - ";
-		if (errorText)
-			errorText += errorThrown;
+		if (options.errorThrown)
+			errorText += options.errorThrown;
+
+		if (options.compact) {
+			$("#errorTitle").hide();
+			$("#errorFooter").hide();
+		} else {
+			$("#errorTitle").show();
+			$("#errorFooter").show();
+		}
 		
 		this.errorMessage.html(errorText);
 		this.errorContainer.fadeIn('fast');
