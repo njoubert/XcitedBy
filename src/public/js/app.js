@@ -1,8 +1,5 @@
 
-var actualTitle;
-var actualAuthors;
-
-
+var paperData;
 
 //*********************************************
 // Finite State Machine for handling display
@@ -30,37 +27,31 @@ DisplayFSM.prototype.transitionToState = function(name) {
 	var args = Array.prototype.slice.call(arguments, 1);
 	state.func.apply(state.context, args);
 }
+//***********************************************
 
+
+//*********************************************
+// Finite State Machine for handling display
+//*********************************************
+
+var chopString = function(str, maxlen) {
+	if (str.length > maxlen) {
+		return str.slice(0,maxlen) + "..."
+	} else {
+		return str;
+	}
+}
 
 //***********************************************
 
-var confirmCancel = function() {
 
-	displayFSM.transitionToState('start');
-
-}
+var paperDeetsTemplate;
 
 var confirm = function() {
 
 	displayFSM.transitionToState('waiting', 3000);
 
 	setTimeout(function() {
-
-	displayFSM.transitionToState('waiting', 2000);
-
-	}, 1000);
-
-	setTimeout(function() {
-
-	displayFSM.transitionToState('waiting', 1000);
-
-	}, 2000);
-
-	setTimeout(function() {
-
-		actualTitle = "Liszt: A Domain Specific Language for Building Portable Mesh-based PDE Solvers";
-
-		$("#resultsTitle").html(actualTitle);
 
 		$('#example1').simple_datagrid({
 			data: [
@@ -72,8 +63,6 @@ var confirm = function() {
 
 		displayFSM.transitionToState('showResults');
 
-
-
 	}, 3000);
 
 	return false;
@@ -83,23 +72,33 @@ var confirm = function() {
 
 var submit = function() {
 
+		var titleToSearchFor = $("#input_title").val();
+
+		if (!titleToSearchFor) {
+			return false;
+		}
+
 		displayFSM.transitionToState('waiting');
 
-		var titleToSearchFor = $("#submitform").val();
-
 		$.ajax("/checkPaper", {
-			success: function(jqXHR, textStatus, errorThrown) {
 
-				actualTitle = "Liszt: A Domain Specific Language for Building Portable Mesh-based PDE Solvers";
-				actualAuthors = "Zachary DeVito, Niels Joubert, Francisco Palacios, Stephen Oakley, Montserrat Medina, Mike Barrientos, Erich Elsen, Frank Ham, Alex Aiken, Karthik Duraisamy, Eric Darve, Juan Alonso, Pat Hanrahan"
+			timeout: 120000,
 
-				$("#resultsTitle").html(actualTitle);
-				$("#resultsAuthors").html(actualAuthors);
+			data: {
+				title: titleToSearchFor
+			},
 
+			success: function(data, textStatus, jqXHR) {
+
+				paperData = data;
+
+				$("#paperToSearchFor").html(paperDeetsTemplate({paper: paperData}));
+				$("#input_title").val(paperData.title);
 
 				displayFSM.transitionToState('confirmSearch');
 
 			},
+
 			error: function(jqXHR, textStatus, errorThrown) {
 
 				displayFSM.transitionToState('error', textStatus, errorThrown);
@@ -116,13 +115,7 @@ var displayFSM = new DisplayFSM();
 
 $(document).ready(function() {
 
-
-
 	//Here we set up the finite state machine for the display's states
-	// start - when we only have the search box
-	// waiting - when we're waiting for data back from the server
-	// confirmSearch - when we want the user to confirm his search
-	// showResults - 
 	var displayContext = {
 		searchContainer:     $("#searchContainer"),
 		resultsContainer:    $("#resultsContainer"),
@@ -141,6 +134,7 @@ $(document).ready(function() {
 		this.searchContainer.show();
 		this.resultsContainer.hide();
 		this.errorContainer.hide();
+		this.popOverContainer.hide();
 	});
 
 	displayFSM.insertNewState("waiting", displayContext, function(waitTime) {
@@ -179,6 +173,7 @@ $(document).ready(function() {
 	displayFSM.insertNewState("error", displayContext, function(textStatus, errorThrown) {
 		this.searchContainer.show();
 		this.resultsContainer.hide();
+		this.popOverContainer.hide();
 		this.errorMessage.html(textStatus + " - " + errorThrown);
 		this.errorContainer.fadeIn('fast');
 
@@ -190,7 +185,13 @@ $(document).ready(function() {
 
 	$("#confirmbutton").click(confirm);
 	$("#confirmform").submit(confirm);
-	$("#confirmcancelbutton").click(confirmCancel);
 
+	$("#input_title").click(function(){
+    	// Select input field contents
+    	this.select();
+    	return false;
+}	);
+
+	paperDeetsTemplate = _.template(document.getElementById('tmpl-paperDeets').innerHTML);
 
 });

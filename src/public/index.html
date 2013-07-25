@@ -23,6 +23,7 @@
 	<link rel="stylesheet" href="css/simple.datagrid.css">
 	<link rel="stylesheet" href="css/main.css">
 
+	<script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/jquery-2.0.3.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/simple.datagrid.js"></script>
 	<script src="js/app.js" type="text/javascript" charset="utf-8"></script>
@@ -36,6 +37,14 @@
 	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 	<link rel="apple-touch-icon" sizes="72x72" href="images/72x72.png">
 	<link rel="apple-touch-icon" sizes="114x114" href="images/72x72.png">
+
+
+<script id='tmpl-paperDeets' type='text/template'>
+<div class="paper">
+<div class="paper_title">[<%= paper.year %>] <%= chopString(paper.title, 120) %></div>
+<div class="paper_authors"><%= chopString(paper.authors, 120) %> - <%= chopString(paper.venue, 20) %></div>
+</div>
+</script>
 
 </head>
 <body>
@@ -118,12 +127,8 @@
 				<div id="resultsConfirmation">
 				<form id="confirmform">
 					<h3>Just to confirm, we're about to build the citation graph for :</h3>
-					<p>
-					<span id="resultsTitle"> </span>
+					<div id="paperToSearchFor"></div>
 					<br/>
-					<h3>by</h3>
-					<span id="resultsAuthors"> </span>
-					</p>
 					<input type="button" value="Do it!" class="button-link" id="confirmbutton">
 				</form>
 				</div>

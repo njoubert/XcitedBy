@@ -103,6 +103,13 @@ a:hover {
     right: 5px;
 }
  
+.paper_title {
+    color:;
+}
+.paper_authors {
+    color: #009933;
+    font-size: 10pt;
+}
 input[type="text"] {
 
     height: 24px;

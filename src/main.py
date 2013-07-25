@@ -1,4 +1,5 @@
 import cherrypy
+import json
 
 import scholar
 
@@ -45,11 +46,19 @@ class root_page(object):
     @cherrypy.expose
     def checkPaper(self, *args, **kwargs):
 
-        return "HESSS";
+        papertitle = kwargs['title'];
 
+        cherrypy.response.headers['Content-Type'] = "application/json"
+        if papertitle:
+            message = {"title" :"Liszt: a domain specific language for building portable mesh-based PDE solvers", "authors":  "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", "venue": "SC", "year": "2011" } 
+            return json.dumps(message);
+        else:
+            raise cherrypy.HTTPError(500, "You need to supply a paper title")
 
-
-
+    @cherrypy.expose
+    def getCitationGraph(self, *args, **kwargs):
+        message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
+        return json.dumps(message);
 
 
 cherrypy.quickstart(root_page())
