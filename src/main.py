@@ -38,4 +38,8 @@ class root_page(object):
         message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
         return json.dumps(message);
 
+
+cherrypy.config.update({'server.socket_port': 61337,
+                       })
+
 cherrypy.quickstart(root_page())
