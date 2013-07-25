@@ -26,7 +26,9 @@ DisplayFSM.prototype.insertNewState = function(name, context, stateFunc) {
 DisplayFSM.prototype.transitionToState = function(name) {
 	console.log("Display transtioning to ", name);
 	var state = this.states[name];
-	state.func.call(state.context);
+
+	var args = Array.prototype.slice.call(arguments, 1);
+	state.func.apply(state.context, args);
 }
 
 
@@ -40,7 +42,19 @@ var confirmCancel = function() {
 
 var confirm = function() {
 
-	displayFSM.transitionToState('waiting');
+	displayFSM.transitionToState('waiting', 3000);
+
+	setTimeout(function() {
+
+	displayFSM.transitionToState('waiting', 2000);
+
+	}, 1000);
+
+	setTimeout(function() {
+
+	displayFSM.transitionToState('waiting', 1000);
+
+	}, 2000);
 
 	setTimeout(function() {
 
@@ -60,7 +74,7 @@ var confirm = function() {
 
 
 
-	}, 2000);
+	}, 3000);
 
 	return false;
 
@@ -73,21 +87,26 @@ var submit = function() {
 
 		var titleToSearchFor = $("#submitform").val();
 
-		setTimeout(function() {
+		$.ajax("/checkPaper", {
+			success: function(jqXHR, textStatus, errorThrown) {
 
-			actualTitle = "Liszt: A Domain Specific Language for Building Portable Mesh-based PDE Solvers";
-			actualAuthors = "Zachary DeVito, Niels Joubert, Francisco Palacios, Stephen Oakley, Montserrat Medina, Mike Barrientos, Erich Elsen, Frank Ham, Alex Aiken, Karthik Duraisamy, Eric Darve, Juan Alonso, Pat Hanrahan"
+				actualTitle = "Liszt: A Domain Specific Language for Building Portable Mesh-based PDE Solvers";
+				actualAuthors = "Zachary DeVito, Niels Joubert, Francisco Palacios, Stephen Oakley, Montserrat Medina, Mike Barrientos, Erich Elsen, Frank Ham, Alex Aiken, Karthik Duraisamy, Eric Darve, Juan Alonso, Pat Hanrahan"
 
-			$("#resultsTitle").html(actualTitle);
-			$("#resultsAuthors").html(actualAuthors);
-
-
-			displayFSM.transitionToState('confirmSearch');
+				$("#resultsTitle").html(actualTitle);
+				$("#resultsAuthors").html(actualAuthors);
 
 
+				displayFSM.transitionToState('confirmSearch');
 
-		}, 800);
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
 
+				displayFSM.transitionToState('error', textStatus, errorThrown);
+
+			}
+
+		});
 
 		return false;
 
@@ -107,21 +126,34 @@ $(document).ready(function() {
 	var displayContext = {
 		searchContainer:     $("#searchContainer"),
 		resultsContainer:    $("#resultsContainer"),
+		
 		popOverContainer:    $("#popOverContainer"),
+		busyText: 	         $("#busyText"),
+
 		resultsConfirmation: $("#resultsConfirmation"),
-		resultsData:         $("#resultsData")
+		resultsData:         $("#resultsData"),
+
+		errorContainer: 	 $("#errorContainer"),
+		errorMessage: 		 $("#errorMessage")
 	}
 
 	displayFSM.insertNewState("start", displayContext, function() {
 		this.searchContainer.show();
 		this.resultsContainer.hide();
+		this.errorContainer.hide();
 	});
 
-	displayFSM.insertNewState("waiting", displayContext, function() {
+	displayFSM.insertNewState("waiting", displayContext, function(waitTime) {
 		this.resultsContainer.hide();
 		this.resultsData.hide();
 		this.resultsConfirmation.hide();
 		this.popOverContainer.show();
+		this.errorContainer.hide();
+		if (waitTime) {
+			this.busyText.html("Expected wait time: " + waitTime/1000 + "s");			
+		} else {
+			this.busyText.html("");
+		}
 		//this.resultsContainer.slideDown('fast');
 	});
 
@@ -130,6 +162,7 @@ $(document).ready(function() {
 		this.resultsContainer.show();
 		this.popOverContainer.hide();
 		this.resultsData.hide();
+		this.errorContainer.hide();
 		this.resultsConfirmation.slideDown('fast');
 	});
 
@@ -138,9 +171,18 @@ $(document).ready(function() {
 		this.resultsContainer.show();
 		this.popOverContainer.hide();
 		this.resultsConfirmation.hide();
+		this.errorContainer.hide();
 		this.resultsData.slideDown('fast');
 	});
 
+
+	displayFSM.insertNewState("error", displayContext, function(textStatus, errorThrown) {
+		this.searchContainer.show();
+		this.resultsContainer.hide();
+		this.errorMessage.html(textStatus + " - " + errorThrown);
+		this.errorContainer.fadeIn('fast');
+
+	});
 
 
 	$("#submitbutton").click(submit);
@@ -151,4 +193,4 @@ $(document).ready(function() {
 	$("#confirmcancelbutton").click(confirmCancel);
 
 
-})
+});

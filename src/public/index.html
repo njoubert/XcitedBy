@@ -71,8 +71,17 @@
 		<div class="row remove-bottom" id="searchRow">
 
 			<div id="popOverContainer" style="display:none;">
+				<div id="popOverContent">
 				<div id="busySpinner">
+					<center>
 					<img src="images/ajax-loader.gif"/>
+					</center>
+					<center>
+					<span id="busyText">
+					Anticipated wait: 5 mins
+					</span>
+					</center>
+				</div>
 				</div>
 			</div>
 
@@ -84,6 +93,24 @@
 				</form>
 			</div>
 
+		</div>
+
+		<div class="row" id="errorContainer" style="display:none;">
+			
+			<div class="sixteen columns" id="errorBox">
+				<div id="errorInside">
+					<strong>Error!</strong>
+					<div id="errorMessage"></div>
+					<strong>We logged the error, please try again, and tweet support questions to us!</strong>
+				</div>
+				<div id="twitterSupportButton">
+
+<a href="https://twitter.com/intent/tweet?screen_name=xcitedby" class="twitter-mention-button" data-related="xcitedby">Tweet to @xcitedby</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+					
+
+				</div>
+			</div>
 		</div>
 
 		<div class="row" id="resultsContainer" style="display:none;">
