@@ -20,9 +20,12 @@
 	<link rel="stylesheet" href="css/base.css">
 	<link rel="stylesheet" href="css/skeleton.css">
 	<link rel="stylesheet" href="css/layout.css">
+	<link rel="stylesheet" href="css/simple.datagrid.css">
 	<link rel="stylesheet" href="css/main.css">
 
+	<script src="js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/jquery-2.0.3.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/simple.datagrid.js"></script>
 	<script src="js/app.js" type="text/javascript" charset="utf-8"></script>
 
 	<!--[if lt IE 9]>
@@ -30,10 +33,18 @@
 	<![endif]-->
 
 	<!-- Favicon ================================================== -->
-	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="shortcut icon" type="image/png"  href="images/72x72.png">
 	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
-	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/72x72.png">
+
+
+<script id='tmpl-paperDeets' type='text/template'>
+<div class="paper">
+<div class="paper_title">[<%= paper.year %>] <%= chopString(paper.title, 120) %></div>
+<div class="paper_authors"><%= chopString(paper.authors, 120) %> - <%= chopString(paper.venue, 20) %></div>
+</div>
+</script>
 
 </head>
 <body>
@@ -41,56 +52,108 @@
 	<!-- Delete everything in this .container and get started on your own site! -->
 
 	<div class="container">
-		<div class="row">
-			<div class="sixteen columns" style="margin-top: 40px">
-
+		<div class="row not-on-phone">
+			<div class="sixteen columns">
+		&nbsp
 			</div>
 		</div>
 
 		<div class="row">
 
-			<div class="two-thirds column">
-				<img src="images/72x72.png">
+			<div class="seven columns">
+				<img src="images/72x72.png" class="not-on-phone">
 				<h1 class="remove-half">xcitedby</h1>
-				<h3>helping you traverse the  <br/>google scholar citation graph</h3>
+				<h3>helping you traverse the google scholar citation graph</h3>
 			</div>
-			<div class="one-third column">
-				<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://xcitedby.org/" data-text="Useful tool for traversing the google scholar citation graph!" data-size="large" data-related="xcitedby">Tweet</a>
+			<div class="five columns offset-by-four">
+				
+				<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://xcitedby.org/" data-text="Useful tool for traversing the google scholar citation graph!" data-size="large" data-related="xcitedby">Tweet this</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<a href="https://twitter.com/xcitedby" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @xcitedby</a>
 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 				
 			</div>
 
 		</div>
 
-		<div class="row remove-bottom">
+		<div class="row remove-bottom" id="searchRow">
 
-			<div class="two-thirds column">
+			<div id="popOverContainer" style="display:none;">
+				<div id="popOverContent">
+				<div id="busySpinner">
+					<center>
+					<img src="images/ajax-loader.gif"/>
+					</center>
+					<center>
+					<span id="busyText">
+					Anticipated wait: 5 mins
+					</span>
+					</center>
+				</div>
+				</div>
+			</div>
+
+			<div class="sixteen columns" id="searchContainer">
 				1. Enter a paper title
 				<form id="submitform">
 				<input type="text" id="input_title"/>
-				<input type="button" value="Submit" class="button-link" id="submitbutton"/>
+				<input type="button" value="Search" class="button-link" id="submitbutton"/>
 				</form>
 			</div>
-			<div class="one-third column">&nbsp</div>
 
+		</div>
+
+		<div class="row" id="errorContainer" style="display:none;">
+			
+			<div class="sixteen columns" id="errorBox">
+				<div id="errorInside">
+					<strong>Error!</strong>
+					<div id="errorMessage"></div>
+					<strong>We logged the error, please try again, and tweet support questions to us!</strong>
+				</div>
+				<div id="twitterSupportButton">
+
+<a href="https://twitter.com/intent/tweet?screen_name=xcitedby" class="twitter-mention-button" data-related="xcitedby">Tweet to @xcitedby</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+					
+
+				</div>
+			</div>
 		</div>
 
 		<div class="row" id="resultsContainer" style="display:none;">
 			<div class="sixteen column">
-				<h3>results</h3>
-				<div id="resultsSpinner">
-					<img src="images/ajax-loader.gif"/>
+				<div id="resultsConfirmation">
+				<form id="confirmform">
+					<h3>Just to confirm, we're about to build the citation graph for :</h3>
+					<div id="paperToSearchFor"></div>
+					<br/>
+					<input type="button" value="Do it!" class="button-link" id="confirmbutton">
+				</form>
 				</div>
-				<div id="resultsBox">
-
+				<div id="resultsData">
+					<h3>results</h3>
+					<table id="example1">
+						<thead>
+							<tr>
+								<th>Distance</th>
+								<th>Citations</th>
+								<th>Title</th>
+								<th>Authors</th>
+								<th>Year</th>
+								<th>Venue</th>
+							</tr>
+						</thead>
+					</table>
 				</div>
 			</div>	
 		</div>
 
 		<div class="row">
-			<div class="sixteen column">
+			<div class="sixteen columns footer">
 				<hr class="" />
-				<p>A exercise in scholarly toolbuilding by <a href="http://njoubert.com/">Niels</a> and <a href="http://graphics.stanford.edu/~mlrobert">Mike</a>. Find us on <a href="">github</a>.</p>
+				<p>A exercise in scholarly toolbuilding by <a href="http://njoubert.com/">Niels</a> and <a href="http://graphics.stanford.edu/~mlrobert">Mike</a>. We believe in contributing to the community - fork us on <a href="https://github.com/mroberts3000/CitationGraphTransitiveClosure">github</a>!</p>
 			</div>
 		<div>
 
@@ -99,4 +162,16 @@
 
 
 </body>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-42670817-1', 'xcitedby.org');
+  ga('send', 'pageview');
+
+</script>
+
 </html>

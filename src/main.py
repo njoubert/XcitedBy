@@ -1,13 +1,18 @@
 import cherrypy
+import json
 
 import scholar
-
 import torScholar
-import dataCollector
 
+import os.path
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-class form_response_page:
+class root_page(object):
+    _cp_config = {'tools.staticdir.on' : True,
+                  'tools.staticdir.dir' : os.path.join(current_dir, 'public'),
+                  'tools.staticdir.index' : 'index.html',
+    }
 
     @cherrypy.expose
     def index(self, *args, **kwargs):
@@ -31,23 +36,22 @@ class form_response_page:
             html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + str(depth) + " Deep</td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
         html = html + "</table></body></html>"
         return html
-
-class root_page:
-
-    form_response = form_response_page()
     
     @cherrypy.expose
-    def index(self):
-        html = \
-'''
-<form action="/form_response/" method="POST">
-    Enter the name of the paper here:
-    <input type="textbox" name="paper_name" />
-    <input type="submit">
-</form>
-'''
-        return html
+    def checkPaper(self, *args, **kwargs):
 
+        papertitle = kwargs['title'];
 
+        cherrypy.response.headers['Content-Type'] = "application/json"
+        if papertitle:
+            message = {"title" :"Liszt: a domain specific language for building portable mesh-based PDE solvers", "authors":  "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", "venue": "SC", "year": "2011" } 
+            return json.dumps(message);
+        else:
+            raise cherrypy.HTTPError(500, "You need to supply a paper title")
+
+    @cherrypy.expose
+    def getCitationGraph(self, *args, **kwargs):
+        message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
+        return json.dumps(message);
 
 cherrypy.quickstart(root_page())

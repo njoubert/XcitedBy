@@ -9,8 +9,8 @@ h1, h2, h3, h4, h5, h6 {
 
 h1 {
 	color: rgb(56,113,248);
-	font-size: 60pt;
-	line-height: 60pt;
+	font-size: 54pt;
+	line-height: 54pt;
 	font-weight: bold;
 }
 
@@ -27,19 +27,104 @@ a:hover {
 	color: #0af;
 }
 
+.footer {
+    color: #666;
+}
 
+@media only screen and (max-width: 767px) {
+    .not-on-phone {
+        display: none;
+    }
+}
+@media only screen and (max-width: 959px) {
+    .not-on-tablet {
+        display: none;
+    }
+}
+
+#popOverContainer {
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: white;
+    opacity: 0.9;
+    z-index: 5;
+
+
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: solid 1px lightgray;
+
+}
+
+#popOverContent {
+    display:table;
+    height: 100%;
+    width: 100%;
+}
+#busySpinner {
+    height: 100%;
+    top:0;
+    bottom:0;
+    margin:auto;
+    display:table-cell;
+    vertical-align: middle;
+}
+
+
+#searchRow {
+    position: relative;
+}
+
+#errorContainer {
+
+}
+
+#errorBox {
+    color: black;
+    border: 2px solid red;
+    background: #FF9494;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    position: relative;
+}
+
+#errorInside {
+    padding: 1em;
+}
+
+#twitterSupportButton {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+ 
+.paper_title {
+    color:;
+}
+.paper_authors {
+    color: #009933;
+    font-size: 10pt;
+}
 input[type="text"] {
-	width: 590px;
-	padding: 12px;
-	height: 24px;
+
+    height: 24px;
+	width:90%;
+
+    padding: 12px;
 	margin-bottom: 9px;
 	margin-top: 5px;
-	font-size: 20px;
+
+    font-size: 20px;
 	line-height: 22px;
 }
 
 input[type="button"] {
-
+    
 	font-size: 24px;
 	line-height: 32px;
 	font-weight: 700;
