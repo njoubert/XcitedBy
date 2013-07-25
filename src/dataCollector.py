@@ -1,18 +1,22 @@
 
 import scholar
 
-def getAllPapers(papertitle, querier=scholar.ScholarQuerier()):
+def getPaper(papertitle, querier=scholar.ScholarQuerier()):
 
     papers = scholar.papers_by_title(papertitle, querier)
 
-    print "Found paper:"
+    print "[DATA COLLECTOR] Found paper:"
     print "  ", papers[0]["title"], "(", papers[0]["papernumber"], ")"
     print "  ", "with", papers[0]["num_citations"], "citations"
     print
 
-    allPapers = dict()
+    return paper[0]
 
-    toCheckPapers = [(papers[0],0)]
+def getAllCitingPapers(papertitle, querier=scholar.ScholarQuerier()):
+
+    paper         = getPaper(papertitle, querier)
+    allPapers     = dict()
+    toCheckPapers = [(paper,0)]
 
     while (len(toCheckPapers) > 0):
 
@@ -25,7 +29,7 @@ def getAllPapers(papertitle, querier=scholar.ScholarQuerier()):
 
         if (paper["papernumber"]):
 
-            print paper["title"]
+            print "[DATA COLLECTOR] " paper["title"]
 
             newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
 
