@@ -101,7 +101,12 @@ var submit = function() {
 
 			error: function(jqXHR, textStatus, errorThrown) {
 
-				displayFSM.transitionToState('error', textStatus, errorThrown);
+				if (jqXHR.statusCode().status == 404) {
+					displayFSM.transitionToState('error', textStatus, "The backend is currently offline");
+				} else {
+					displayFSM.transitionToState('error', textStatus, errorThrown);
+
+				}
 
 			}
 
