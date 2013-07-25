@@ -10,7 +10,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 class root_page(object):
     _cp_config = {'tools.staticdir.on' : True,
-                  'tools.staticdir.dir' : os.path.join(current_dir, 'public'),
+                  'tools.staticdir.dir' : os.path.join(current_dir, '..', 'www'),
                   'tools.staticdir.index' : 'index.html',
     }
 
