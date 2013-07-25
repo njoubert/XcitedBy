@@ -2,8 +2,7 @@ import cherrypy
 
 import scholar
 
-import proxyListGetter
-import proxyScholar
+import torScholar
 import dataCollector
 
 
@@ -14,8 +13,7 @@ class form_response_page:
     def index(self, *args, **kwargs):
         papertitle = kwargs['paper_name']
 
-        proxies = proxyListGetter.getProxiesMyPrivateProxy()
-        querier = proxyScholar.ProxyScholarQuerier(proxies)
+        querier = torScholar.TorScholarQuerier()
         papersDict = dataCollector.getAllPapers(papertitle, querier)
 
         papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1][0]['num_citations'], reverse=True)

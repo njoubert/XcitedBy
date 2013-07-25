@@ -26,7 +26,6 @@ def getAllPapers(papertitle, querier=scholar.ScholarQuerier()):
         if (paper["papernumber"]):
 
             print paper["title"]
-            print
 
             newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
 
