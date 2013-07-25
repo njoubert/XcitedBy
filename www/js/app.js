@@ -75,6 +75,7 @@ var submit = function() {
 		var titleToSearchFor = $("#input_title").val();
 
 		if (!titleToSearchFor) {
+			displayFSM.transitionToState('error', 'Please type in a paper title!');
 			return false;
 		}
 
@@ -179,7 +180,16 @@ $(document).ready(function() {
 		this.searchContainer.show();
 		this.resultsContainer.hide();
 		this.popOverContainer.hide();
-		this.errorMessage.html(textStatus + " - " + errorThrown);
+		
+		var errorText = "";
+		if (textStatus)
+			errorText += textStatus;
+		if (textStatus && errorThrown)
+			errorText += " - ";
+		if (errorText)
+			errorText += errorThrown;
+		
+		this.errorMessage.html(errorText);
 		this.errorContainer.fadeIn('fast');
 
 	});
