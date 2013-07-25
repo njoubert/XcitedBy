@@ -14,29 +14,13 @@ class root_page(object):
                   'tools.staticdir.index' : 'index.html',
     }
 
-    @cherrypy.expose
-    def index(self, *args, **kwargs):
-        papertitle = kwargs['paper_name']
+    #
+    # Get papers using TOR proxying (assumes TOR is running and is correctly configured)
+    #
+    # querier = torScholar.TorScholarQuerier()
+    # papersDict = dataCollector.getAllPapers(papertitle, querier)
+    #
 
-        querier = torScholar.TorScholarQuerier()
-        papersDict = dataCollector.getAllPapers(papertitle, querier)
-
-        papersSorted = sorted(papersDict.iteritems(), key=lambda x: x[1][0]['num_citations'], reverse=True)
-
-        html = "<html><head></head><body>"
-        html = html + "<h1>Citation Search Results</h1>"
-        html = html + "<h3>" + str(len(papersSorted)) + " papers cited (directly or indirectly) \"" + papertitle + "\"</h3>"
-        html = html + "<table>"
-        for t,pair in papersSorted:
-            a, depth = pair
-            year = str(a['year']) if a['year'] else "-"
-            url_citations = a['url_citations'] if a['url_citations'] else "#"
-            num_citations = str(a['num_citations']) if a['num_citations'] else "0"
-            url = a['url'] if a['url'] else "#"
-            html = html + "<tr><td><a href='" + url_citations + "'> "+ num_citations + " Citations</a></td><td>" + str(depth) + " Deep</td><td>" + year + "</td><td><a href='"+ url +"'>" + t + "</a></td></tr>"
-        html = html + "</table></body></html>"
-        return html
-    
     @cherrypy.expose
     def checkPaper(self, *args, **kwargs):
 
