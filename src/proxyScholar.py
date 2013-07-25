@@ -17,29 +17,7 @@ class ProxyScholarQuerier(scholar.ScholarQuerier):
     a randomly chosen web proxy from an input list of web proxies.
     """
 
-    #UA = 'Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9'
-
-    #class Parser(ScholarParser120726):
-    #    def __init__(self, querier):
-    #        ScholarParser.__init__(self)
-    #        self.querier = querier
-
-    #    def handle_article(self, art):
-    #        return self.querier.add_article(art)
-
-    #def __init__(self, author='', scholar_url=None, count=0):
-    #    self.articles = []
-    #    self.author = author
-    #    # Clip to 100, as Google doesn't support more anyway
-    #    self.count = min(count, 100)
-
-    #    if author == '':
-    #        self.scholar_url = self.NOAUTH_URL
-    #    else:
-    #        self.scholar_url = scholar_url or self.SCHOLAR_URL
-
-    #    if self.count != 0:
-    #        self.scholar_url += '&num=%d' % self.count
+    UA = "Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9"
 
     def __init__(self, proxies):
         self.proxies = proxies
