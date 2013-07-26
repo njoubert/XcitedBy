@@ -67,8 +67,11 @@ import urllib
 import urllib2
 import time
 import random
-from BeautifulSoup import BeautifulSoup
 
+try:
+    from BeautifulSoup import BeautifulSoup
+except:
+    from bs4 import BeautifulSoup
 
 CITATION_REGEX = '.*\?cites=(\d*).*'
 
