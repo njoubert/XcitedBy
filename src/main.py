@@ -14,13 +14,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 
-class root_page(object):
-    _cp_config = \
-    {
-        "tools.staticdir.on"    : True,
-        "tools.staticdir.dir"   : os.path.join(current_dir, "..", "www"),
-        "tools.staticdir.index" : "index.html",
-    }
+class API(object):
 
     @cherrypy.expose
     def getPaper(self, *args, **kwargs):
@@ -52,7 +46,16 @@ class root_page(object):
         message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
         return json.dumps(message);
 
-
+class Root():
+    _cp_config = \
+    {
+        "tools.staticdir.on"    : True,
+        "tools.staticdir.dir"   : os.path.join(current_dir, "..", "www"),
+        "tools.staticdir.index" : "index.html",
+    }
+    
+root = Root()
+root.data = API();
 
 cherrypy.config.update({'server.socket_port': 61337})
-cherrypy.quickstart(root_page())
+cherrypy.quickstart(root)
