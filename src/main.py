@@ -9,10 +9,7 @@ import os
 import os.path
 import sys
 
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-
+import argparse
 
 class API(object):
 
@@ -47,15 +44,14 @@ class API(object):
         return json.dumps(message);
 
 class Root():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
     _cp_config = \
     {
         "tools.staticdir.on"    : True,
         "tools.staticdir.dir"   : os.path.join(current_dir, "..", "www"),
         "tools.staticdir.index" : "index.html",
     }
-
-root = Root()
-root.data = API();
 
 class RedirectExceptions(cherrypy.process.plugins.SimplePlugin):
 
@@ -74,13 +70,31 @@ class RedirectExceptions(cherrypy.process.plugins.SimplePlugin):
         self.stdout_file.close();
         self.stderr_file.close()
 
+if __name__ == "__main__":
 
-for arg in sys.argv:
-    if arg == "PROD":
+    ## Parse Command Line Arguments
+    parser = argparse.ArgumentParser(description='xcitedby.org backend')
+    parser.add_argument('--env', metavar='env', action="store",
+                        default='dev', help='an integer for the accumulator')
+    parser.add_argument('--user', dest='user', action='store',
+                       default='xcitedby',
+                       help='the user under which all files are stored. specified the paths to use.')
+    parser.add_argument('--numTorInstances', dest='numTorInstances', type=int, action='store',
+                       default=4,
+                       help='the user under which all files are stored. specified the paths to use.')
+    args = parser.parse_args()
+
+    ## Configure server hierarchy
+    root = Root()
+    root.data = API();
+
+    ## Setup Environment
+    if args.env == "PROD":
         cherrypy.config.update({'environment': 'production',
                                 'log.error_file': 'site.log',
                                 'server.socket_port': 61337});
         cherrypy.engine.redirectexceptions = RedirectExceptions(cherrypy.engine);
         cherrypy.engine.redirectexceptions.subscribe();
 
-cherrypy.quickstart(root)
+    ## Start the server
+    cherrypy.quickstart(root)
