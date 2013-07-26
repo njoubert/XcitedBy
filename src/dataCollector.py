@@ -5,9 +5,10 @@ def getPaper(papertitle, querier=scholar.ScholarQuerier()):
 
     papers = scholar.papers_by_title(papertitle, querier)
 
-    print "[DATA COLLECTOR INFO] Found paper:"
-    print "  ", papers[0]["title"], "(", papers[0]["papernumber"], ")"
-    print "  ", "with", papers[0]["num_citations"], "citations"
+    print "[DATA COLLECTOR INFO]"
+    print "  Found paper:"
+    print "    ", papers[0]["title"], "(", papers[0]["papernumber"], ")"
+    print "    ", "with", papers[0]["num_citations"], "citations"
     print
 
     return papers[0]
