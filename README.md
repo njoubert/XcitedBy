@@ -11,6 +11,13 @@ Also, notice the commit timestamps for this project - midnight through 7am.
 
 This is research-level code. Tread carefully.
 
+## Running in Production
+
+Pass the command line flag "PROD":
+- stderr and stdout is logged to files
+- cherrypy status is logged to a file
+- cherrypy is kicked into production mode
+
 ##TODO
 
 **Backend:**
