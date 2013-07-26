@@ -11,7 +11,7 @@ import copy
 import socket
 import socks
 import socksipyhandler
-import torUtils
+import torConstants
 
 class TorScholarQuerier(scholar.ScholarQuerier):
     """
@@ -61,18 +61,18 @@ class TorScholarQuerier(scholar.ScholarQuerier):
 
     def _tryUrlReadWithTor(self, url):
 
-        shuffledTorInstances = range(torUtils.NUM_TOR_INSTANCES)
+        shuffledTorInstances = range(torConstants.NUM_TOR_INSTANCES)
         random.shuffle(shuffledTorInstances)
 
         for i in shuffledTorInstances:
 
             try:
-                socket.setdefaulttimeout(10)
+                socket.setdefaulttimeout(2)
 
                 determine_public_facing_ip_url             = "http://www.networksecuritytoolkit.org/nst/tools/ip.php"
                 determine_public_facing_ip_source_no_proxy = urllib.urlopen(determine_public_facing_ip_url).read()
 
-                socksPort                         = torUtils.TOR_BASE_SOCKS_PORT + i
+                socksPort                         = torConstants.TOR_BASE_SOCKS_PORT + i
                 opener                            = urllib2.build_opener(socksipyhandler.SocksiPyHandler(socks.PROXY_TYPE_SOCKS4, '127.0.0.1', socksPort))
                 opener.addheaders                 = [("User-agent", self.UA)]
                 determine_public_facing_ip_source = opener.open(determine_public_facing_ip_url).read()
@@ -92,3 +92,5 @@ class TorScholarQuerier(scholar.ScholarQuerier):
                 print "[TORSCHOLAR ERROR] urllib2 error: " + str(e)
             except Exception, e:
                 print "[TORSCHOLAR ERROR] Exception: " + str(e)
+
+        raise Exception("[TORSCHOLAR ERROR] Couldn't connect to any TOR proxy.")
