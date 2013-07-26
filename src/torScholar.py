@@ -11,6 +11,7 @@ import copy
 import socket
 import socks
 import socksipyhandler
+import torUtils
 
 class TorScholarQuerier(scholar.ScholarQuerier):
     """
@@ -55,31 +56,41 @@ class TorScholarQuerier(scholar.ScholarQuerier):
         This method initiates a query with subsequent parsing of the
         response.
         """
-        html = self._tryUrlReadWithProxy(url)
+        html = self._tryUrlReadWithTor(url)
         self.parse(html)
 
     def _tryUrlReadWithTor(self, url):
 
-        try:
-            socket.setdefaulttimeout(10)
+        shuffledTorInstances = range(torUtils.NUM_TOR_INSTANCES)
+        random.shuffle(shuffledTorInstances)
 
-            determine_public_facing_ip_url             = "http://www.networksecuritytoolkit.org/nst/tools/ip.php"
-            determine_public_facing_ip_source_no_proxy = urllib.urlopen(determine_public_facing_ip_url).read()
+        print shuffledTorInstances
+        
+        for i in shuffledTorInstances:
 
-            request                           = urllib2.build_opener(socksipyhandler.SocksiPyHandler(socks.PROXY_TYPE_SOCKS4, '127.0.0.1', 9050))
-            request.addheaders                = [("User-agent", self.UA)]
-            determine_public_facing_ip_source = request.open(determine_public_facing_ip_url).read()
+            try:
+                socket.setdefaulttimeout(10)
 
-            if determine_public_facing_ip_source_no_proxy == determine_public_facing_ip_source:
-                raise Exception                                                                                                                             \
-                    (                                                                                                                                       \
-                        "Public facing IP without TOR (" + determine_public_facing_ip_source_no_proxy.strip("\n") + ") matches public facing IP with TOR" + \
-                        "(" + determine_public_facing_ip_source.strip("\n") + ")."
-                    )
+                determine_public_facing_ip_url             = "http://www.networksecuritytoolkit.org/nst/tools/ip.php"
+                determine_public_facing_ip_source_no_proxy = urllib.urlopen(determine_public_facing_ip_url).read()
 
-            return request.open(url).read()
+                socksPort                         = torUtils.TOR_BASE_SOCKS_PORT + i
+                opener                            = urllib2.build_opener(socksipyhandler.SocksiPyHandler(socks.PROXY_TYPE_SOCKS4, '127.0.0.1', socksPort))
+                opener.addheaders                 = [("User-agent", self.UA)]
+                determine_public_facing_ip_source = opener.open(determine_public_facing_ip_url).read()
 
-        except (urllib2.URLError, urllib2.HTTPError), e:
-            print "urllib2 error: " + str(e)
-        except Exception, e:
-            print "Exception: " + str(e)
+                if determine_public_facing_ip_source_no_proxy == determine_public_facing_ip_source:
+                    raise Exception                                                              \
+                        (                                                                      + \
+                            "[TORSCHOLAR ERROR] Public facing IP without TOR "                 + \
+                            "(" + determine_public_facing_ip_source_no_proxy.strip("\n") + ")" + \
+                            " matches public facing IP with TOR"                               + \
+                            "(" + determine_public_facing_ip_source.strip("\n") + ")."
+                        )
+
+                return opener.open(url).read()
+
+            except (urllib2.URLError, urllib2.HTTPError), e:
+                print "[TORSCHOLAR ERROR] urllib2 error: " + str(e)
+            except Exception, e:
+                print "[TORSCHOLAR ERROR] Exception: " + str(e)
