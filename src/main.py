@@ -57,8 +57,6 @@ class Root():
 root = Root()
 root.data = API();
 
-cherrypy.config.update({'server.socket_port': 61337})
-
 class RedirectExceptions(cherrypy.process.plugins.SimplePlugin):
 
     def start(self):
@@ -81,7 +79,7 @@ for arg in sys.argv:
     if arg == "PROD":
         cherrypy.config.update({'environment': 'production',
                                 'log.error_file': 'site.log',
-                                });
+                                'server.socket_port': 61337});
         cherrypy.engine.redirectexceptions = RedirectExceptions(cherrypy.engine);
         cherrypy.engine.redirectexceptions.subscribe();
 
