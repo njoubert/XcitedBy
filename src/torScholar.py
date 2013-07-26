@@ -64,8 +64,6 @@ class TorScholarQuerier(scholar.ScholarQuerier):
         shuffledTorInstances = range(torUtils.NUM_TOR_INSTANCES)
         random.shuffle(shuffledTorInstances)
 
-        print shuffledTorInstances
-        
         for i in shuffledTorInstances:
 
             try:
