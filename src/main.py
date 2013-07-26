@@ -7,7 +7,7 @@ import dataCollector
 
 import os
 import os.path
-
+import sys
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,9 +53,36 @@ class Root():
         "tools.staticdir.dir"   : os.path.join(current_dir, "..", "www"),
         "tools.staticdir.index" : "index.html",
     }
-    
+
 root = Root()
 root.data = API();
 
 cherrypy.config.update({'server.socket_port': 61337})
+
+class RedirectExceptions(cherrypy.process.plugins.SimplePlugin):
+
+    def start(self):
+        self.stderr_file = open("stderr.log", "w");
+        self.stdout_file = open("stdout.log", "w");
+        self.original_stderr = sys.stderr
+        self.original_stdout = sys.stdout
+        
+        sys.stderr = self.stderr_file;
+        sys.stdout = self.stdout_file;
+
+    def stop(self):
+        sys.std_err = self.original_stderr;
+        sys.stdout = self.original_stdout;
+        self.stdout_file.close();
+        self.stderr_file.close()
+
+
+for arg in sys.argv:
+    if arg == "PROD":
+        cherrypy.config.update({'environment': 'production',
+                                'log.error_file': 'site.log',
+                                });
+        cherrypy.engine.redirectexceptions = RedirectExceptions(cherrypy.engine);
+        cherrypy.engine.redirectexceptions.subscribe();
+
 cherrypy.quickstart(root)

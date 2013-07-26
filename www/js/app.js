@@ -81,7 +81,7 @@ var submit = function() {
 
 		displayFSM.transitionToState('waiting');
 
-		$.ajax("/getPaper", {
+		$.ajax("/data/getPaper", {
 
 			timeout: 120000,
 
