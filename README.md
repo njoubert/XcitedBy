@@ -18,6 +18,8 @@ Pass the command line flag "--env PROD":
 - cherrypy status is logged to a file
 - cherrypy is kicked into production mode
 
+Use the bin/bounce.sh script to stop-start the server, which is called from git's post-update script
+
 ##TODO
 
 **Backend:**
