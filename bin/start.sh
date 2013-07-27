@@ -15,7 +15,15 @@ then
 else
 
 	cd $ROOT_DIR
-	nohup python $ROOT_DIR/src/main.py --env prod --numTorInstances 16 >> stdout.log 2>> stderr.log &
+
+	COMMAND="python $ROOT_DIR/src/main.py --env prod --numTorInstances 16"
+
+	if [ $1 == "NOTERM" ]
+	then
+		`$COMMAND` &
+	else
+		nohup $COMMAND > stdout.log 2> stderr.log < /dev/null &
+	fi
 	PID=$!
 	echo $PID > $PID_FILE
 	echo "CherryPy started as PID $PID"
