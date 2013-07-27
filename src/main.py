@@ -84,10 +84,11 @@ if __name__ == "__main__":
                        help="The number of tor instances to launch.")
     commandLineArgs = parser.parse_args()
 
-    print
-    print "Parsed commandline arguments:"
-    print commandLineArgs
-    print
+    if commandLineArgs.env == "dev":
+        print
+        print "Parsed commandline arguments:"
+        print commandLineArgs
+        print
 
     ## Configure server hierarchy
     root = Root()
