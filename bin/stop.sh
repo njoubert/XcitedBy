@@ -12,10 +12,9 @@ then
 	
 	echo "Stopping CherryPy..."
 	kill $PID
-	exit 0
 
 else
 
 	echo "ERROR: cherrypy is not currently running."
-	exit 1
+
 fi
