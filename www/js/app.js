@@ -30,8 +30,95 @@ DisplayFSM.prototype.transitionToState = function(name) {
 //***********************************************
 
 
+
 //*********************************************
-// Finite State Machine for handling display
+// Long Polling
+//*********************************************
+
+function LongPoller(url, options) {
+	this.frequency = options.frequency || 200;
+	this.separator = options.separator || "***SEP***"
+	this.xhr = new XMLHttpRequest();
+	this.url = url;
+}
+
+LongPoller.prototype.start = function() {
+	var self = this;
+	var xhr = this.xhr;
+
+	this.xhr.open("GET", this.url, true);
+	this.xhr.send();
+
+
+	var dataSoFar = "";
+	function parseOutPackets(newData) {
+		dataSoFar += newData;
+
+		//check whether we end with a separator:
+		var completePackets = (dataSoFar.lastIndexOf(self.separator) === (dataSoFar.length - self.separator.length));
+
+		//Now we traverse through dataSoFar to check for packet separators
+		var packets = dataSoFar.split(self.separator);
+
+		var end = completePackets ? packets.length : packets.length - 1;
+
+		for (var i = 0; i < end; i++) {
+			self.__emitPacket(packets[i]);
+		}
+
+		if (completePackets)
+			dataSoFar = ""
+		else
+			dataSoFar = packets[packets.length-1];
+
+	}
+
+	var last_index = 0;
+	function pollData() {
+
+		if (xhr.readyState < 3) {
+			setTimeout(self.frequency, 100);
+			return;
+		}
+
+	    var curr_index = xhr.responseText.length;
+
+	    if (last_index == curr_index) {
+	    	setTimeout(self.frequency, 200); // No new data
+	    	return;
+	    }
+
+	    var s = xhr.responseText.substring(last_index, curr_index);
+	    last_index = curr_index;
+	    parseOutPackets(s);
+
+	    if (xhr.readyState != 4) { // As long as it's not done.
+		    setTimeout(parse, self.frequency);
+		    return;
+	    } else {
+	    	self.__emitDone();
+	    }
+
+	}
+	pollData();
+
+}
+
+
+
+LongPoller.prototype.__emitPacket = function(packet) {
+	console.log("LONGPOLLER emitPacker:", packet);
+}
+
+LongPoller.prototype.__emitDone = function() {
+	console.log("LONGPOLLER Done");
+}
+
+//***********************************************
+
+
+//*********************************************
+// String utils
 //*********************************************
 
 var chopString = function(str, maxlen) {
@@ -81,37 +168,41 @@ var submit = function() {
 
 		displayFSM.transitionToState('waiting');
 
-		$.ajax("/data/getPaper", {
 
-			timeout: 120000,
 
-			data: {
-				title: titleToSearchFor
-			},
+		doLongPoll();
 
-			success: function(data, textStatus, jqXHR) {
+		// $.ajax("/data/getPaper", {
 
-				paperData = data;
+		// 	timeout: 120000,
 
-				$("#paperToSearchFor").html(paperDeetsTemplate({paper: paperData}));
-				$("#input_title").val(paperData.title);
+		// 	data: {
+		// 		title: titleToSearchFor
+		// 	},
 
-				displayFSM.transitionToState('confirmSearch');
+		// 	success: function(data, textStatus, jqXHR) {
 
-			},
+		// 		paperData = data;
 
-			error: function(jqXHR, textStatus, errorThrown) {
+		// 		$("#paperToSearchFor").html(paperDeetsTemplate({paper: paperData}));
+		// 		$("#input_title").val(paperData.title);
 
-				if (jqXHR.statusCode().status == 404) {
-					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:"The backend is currently offline"});
-				} else {
-					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:errorThrown});
+		// 		displayFSM.transitionToState('confirmSearch');
 
-				}
+		// 	},
 
-			}
+		// 	error: function(jqXHR, textStatus, errorThrown) {
 
-		});
+		// 		if (jqXHR.statusCode().status == 404) {
+		// 			displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:"The backend is currently offline"});
+		// 		} else {
+		// 			displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:errorThrown});
+
+		// 		}
+
+		// 	}
+
+		// });
 
 		return false;
 
@@ -143,14 +234,14 @@ $(document).ready(function() {
 		this.popOverContainer.hide();
 	});
 
-	displayFSM.insertNewState("waiting", displayContext, function(waitTime) {
+	displayFSM.insertNewState("waiting", displayContext, function(message) {
 		this.resultsContainer.hide();
 		this.resultsData.hide();
 		this.resultsConfirmation.hide();
 		this.popOverContainer.show();
 		this.errorContainer.hide();
-		if (waitTime) {
-			this.busyText.html("Expected wait time: " + waitTime/1000 + "s");			
+		if (message) {
+			this.busyText.html(message);			
 		} else {
 			this.busyText.html("");
 		}
@@ -209,12 +300,7 @@ $(document).ready(function() {
 	$("#confirmbutton").click(confirm);
 	$("#confirmform").submit(confirm);
 
-	$("#input_title").click(function(){
-    	// Select input field contents
-    	this.select();
-    	return false;
-}	);
-
 	paperDeetsTemplate = _.template(document.getElementById('tmpl-paperDeets').innerHTML);
+
 
 });

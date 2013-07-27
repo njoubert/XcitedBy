@@ -8,6 +8,7 @@ import dataCollector
 import os
 import os.path
 import sys
+import time
 
 import argparse
 
@@ -48,6 +49,30 @@ class API(object):
 
         message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
         return json.dumps(message);
+
+    @cherrypy.expose
+    def testLongPoll(self, *args, **kwargs):
+        
+
+        def run_command():
+            start = 0
+            while start < 5000:
+                yield "Papers indexed: %s***SEP***" % start
+                time.sleep(0.1);
+                start += 5;
+
+            message =                           \
+            {                                   \
+                "title"   : paperDict["title"], \
+                "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
+                "venue"   : "SC",
+                "year"    : paperDict["year"]
+            }
+
+            yield "Done***SEP***"
+            yield "%s***SEP***" % json.dumps(message);                
+
+        return run_command()
 
 class Root():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -105,5 +130,12 @@ if __name__ == "__main__":
         cherrypy.engine.redirectexceptions = RedirectExceptions(cherrypy.engine);
         cherrypy.engine.redirectexceptions.subscribe();
 
+    cherrypy.config.update({
+        'checker.on': False,
+        'response.stream': True,
+        });
+
     ## Start the server
-    cherrypy.quickstart(root)
+    cherrypy.tree.mount(root, config=None)
+    cherrypy.engine.start()
+    cherrypy.engine.block()
