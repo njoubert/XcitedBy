@@ -38,8 +38,22 @@ DisplayFSM.prototype.transitionToState = function(name) {
 function LongPoller(url, options) {
 	this.frequency = options.frequency || 200;
 	this.separator = options.separator || "***SEP***"
-	this.xhr = new XMLHttpRequest();
 	this.url = url;
+
+	this.timeout;
+	this.doneListeners = [];
+	this.packetListeners = [];
+	this.errorListeners = [];
+
+	var xhr = this.xhr = new XMLHttpRequest();
+	xhr.timeout = options.timeout || 0;
+
+	var self = this;
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status != 200) {
+			self.__emitError(this);
+		}
+	}
 }
 
 LongPoller.prototype.start = function() {
@@ -48,7 +62,6 @@ LongPoller.prototype.start = function() {
 
 	this.xhr.open("GET", this.url, true);
 	this.xhr.send();
-
 
 	var dataSoFar = "";
 	function parseOutPackets(newData) {
@@ -60,9 +73,7 @@ LongPoller.prototype.start = function() {
 		//Now we traverse through dataSoFar to check for packet separators
 		var packets = dataSoFar.split(self.separator);
 
-		var end = completePackets ? packets.length : packets.length - 1;
-
-		for (var i = 0; i < end; i++) {
+		for (var i = 0; i < packets.length - 1; i++) {
 			self.__emitPacket(packets[i]);
 		}
 
@@ -75,16 +86,15 @@ LongPoller.prototype.start = function() {
 
 	var last_index = 0;
 	function pollData() {
-
 		if (xhr.readyState < 3) {
-			setTimeout(self.frequency, 100);
+			self.timeout = setTimeout(pollData, self.frequency);
 			return;
 		}
 
 	    var curr_index = xhr.responseText.length;
 
 	    if (last_index == curr_index) {
-	    	setTimeout(self.frequency, 200); // No new data
+	    	self.timeout = setTimeout(pollData, self.frequency); // No new data
 	    	return;
 	    }
 
@@ -93,7 +103,7 @@ LongPoller.prototype.start = function() {
 	    parseOutPackets(s);
 
 	    if (xhr.readyState != 4) { // As long as it's not done.
-		    setTimeout(parse, self.frequency);
+		    self.timeout = setTimeout(pollData, self.frequency);
 		    return;
 	    } else {
 	    	self.__emitDone();
@@ -104,16 +114,47 @@ LongPoller.prototype.start = function() {
 
 }
 
+LongPoller.prototype.abort = function() {
+	xhr.abort();
+	if (this.timeout)
+		clearTimeout(this.timeout);
+}
+
+//Registering listeners
+LongPoller.prototype.onPacket = function(func) {
+	this.packetListeners.push(func);
+	return this;
+}
+LongPoller.prototype.onDone = function(func) {
+	this.doneListeners.push(func);
+	return this;
+}
+LongPoller.prototype.onError = function(func) {
+	this.errorListeners.push(func);
+	return this;
+}
 
 
+//Internal function to emit a packet
 LongPoller.prototype.__emitPacket = function(packet) {
-	console.log("LONGPOLLER emitPacker:", packet);
+	for (var i = 0; i < this.packetListeners.length; i++) {
+		this.packetListeners[i](packet);
+	}
 }
 
+//Internal function to emit done
+LongPoller.prototype.__emitError = function() {
+	for (var i = 0; i < this.errorListeners.length; i++) {
+		this.errorListeners[i](this.xhr);
+	}
+}
+
+//Internal function to emit done
 LongPoller.prototype.__emitDone = function() {
-	console.log("LONGPOLLER Done");
+	for (var i = 0; i < this.doneListeners.length; i++) {
+		this.doneListeners[i](this.xhr);
+	}
 }
-
 //***********************************************
 
 
@@ -168,41 +209,52 @@ var submit = function() {
 
 		displayFSM.transitionToState('waiting');
 
+		/*
+		var longPoller = new LongPoller("/data/testLongPoll", {
 
+		}).onPacket(function(packet) {
+			displayFSM.transitionToState('waiting', packet);
+		}).onDone(function(xhr) {
+			if (xhr.status == 200)
+				displayFSM.transitionToState('confirmSearch');
+		}).onError(function(xhr) {
+			displayFSM.transitionToState('error', {textStatus:xhr.status, errorThrown:"The server responded with an error"});
+		});
 
-		doLongPoll();
+		longPoller.start();
+		*/ //
 
-		// $.ajax("/data/getPaper", {
+		$.ajax("/data/getPaper", {
 
-		// 	timeout: 120000,
+			timeout: 120000,
 
-		// 	data: {
-		// 		title: titleToSearchFor
-		// 	},
+			data: {
+				title: titleToSearchFor
+			},
 
-		// 	success: function(data, textStatus, jqXHR) {
+			success: function(data, textStatus, jqXHR) {
 
-		// 		paperData = data;
+				paperData = data;
 
-		// 		$("#paperToSearchFor").html(paperDeetsTemplate({paper: paperData}));
-		// 		$("#input_title").val(paperData.title);
+				$("#paperToSearchFor").html(paperDeetsTemplate({paper: paperData}));
+				$("#input_title").val(paperData.title);
 
-		// 		displayFSM.transitionToState('confirmSearch');
+				displayFSM.transitionToState('confirmSearch');
 
-		// 	},
+			},
 
-		// 	error: function(jqXHR, textStatus, errorThrown) {
+			error: function(jqXHR, textStatus, errorThrown) {
 
-		// 		if (jqXHR.statusCode().status == 404) {
-		// 			displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:"The backend is currently offline"});
-		// 		} else {
-		// 			displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:errorThrown});
+				if (jqXHR.statusCode().status == 404) {
+					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:"The backend is currently offline"});
+				} else {
+					displayFSM.transitionToState('error', {textStatus:textStatus, errorThrown:errorThrown});
 
-		// 		}
+				}
 
-		// 	}
+			}
 
-		// });
+		});
 
 		return false;
 
