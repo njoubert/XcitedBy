@@ -18,7 +18,7 @@ else
 
 	COMMAND="python $ROOT_DIR/src/main.py --env prod --numTorInstances 16"
 
-	if [ $1 == "NOTERM" ]
+	if [ "$1" == "NOTERM" ]
 	then
 		`$COMMAND` &
 	else
