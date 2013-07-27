@@ -28,15 +28,18 @@ class API(object):
             querier   = torScholar.TorScholarQuerier(commandLineArgs)
             paperDict = dataCollector.getPaper(paperTitle, querier)
 
-            message =                           \
-            {                                   \
-                "title"   : paperDict["title"], \
-                "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
-                "venue"   : "SC",
-                "year"    : paperDict["year"]
-            }
+            if paperDict is not None:
+                message =                           \
+                {                                   \
+                    "title"   : paperDict["title"], \
+                    "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
+                    "venue"   : "SC",
+                    "year"    : paperDict["year"]
+                }
+                return json.dumps(message)
+            else:
+                return json.dumps(None)
 
-            return json.dumps(message);
         else:
             raise cherrypy.HTTPError(500, "You need to supply a paper title")
 
