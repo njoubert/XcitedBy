@@ -1,6 +1,5 @@
 #!/bin/bash
-
-#!/bin/bash
+umask 002
 
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 PID_FILE="$ROOT_DIR/cherrypy.pid"
