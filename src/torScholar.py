@@ -22,8 +22,9 @@ class TorScholarQuerier(scholar.ScholarQuerier):
 
     UA = "Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9"
 
-    def __init__(self):
+    def __init__(self, commandLineArgs):
         scholar.ScholarQuerier.__init__(self);
+        self.commandLineArgs = commandLineArgs
 
     def query(self, search):
         """
@@ -61,7 +62,7 @@ class TorScholarQuerier(scholar.ScholarQuerier):
 
     def _tryUrlReadWithTor(self, url):
 
-        shuffledTorInstances = range(torConstants.NUM_TOR_INSTANCES)
+        shuffledTorInstances = range(self.commandLineArgs.numTorInstances)
         random.shuffle(shuffledTorInstances)
 
         for i in shuffledTorInstances:

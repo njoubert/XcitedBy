@@ -13,6 +13,9 @@ import argparse
 
 class API(object):
 
+    def __init__(self, commandLineArgs):
+        self.commandLineArgs = commandLineArgs
+
     @cherrypy.expose
     def getPaper(self, *args, **kwargs):
 
@@ -22,7 +25,7 @@ class API(object):
 
         if paperTitle:
 
-            querier   = torScholar.TorScholarQuerier()
+            querier   = torScholar.TorScholarQuerier(commandLineArgs)
             paperDict = dataCollector.getPaper(paperTitle, querier)
 
             message =                           \
@@ -73,26 +76,28 @@ class RedirectExceptions(cherrypy.process.plugins.SimplePlugin):
 if __name__ == "__main__":
 
     ## Parse Command Line Arguments
-    parser = argparse.ArgumentParser(description='xcitedby.org backend')
-    parser.add_argument('--env', metavar='env', action="store",
-                        default='dev', help='an integer for the accumulator')
-    parser.add_argument('--user', dest='user', action='store',
-                       default='xcitedby',
-                       help='the user under which all files are stored. specified the paths to use.')
-    parser.add_argument('--numTorInstances', dest='numTorInstances', type=int, action='store',
+    parser = argparse.ArgumentParser(description="xcitedby.org backend")
+    parser.add_argument("--env", metavar="env", action="store",
+                        default="dev", help="Either dev for development (default) or prod for production.")
+    parser.add_argument("--numTorInstances", dest="numTorInstances", type=int, action="store",
                        default=4,
-                       help='the user under which all files are stored. specified the paths to use.')
-    args = parser.parse_args()
+                       help="The number of tor instances to launch.")
+    commandLineArgs = parser.parse_args()
+
+    print
+    print "Parsed commandline arguments:"
+    print commandLineArgs
+    print
 
     ## Configure server hierarchy
     root = Root()
-    root.data = API();
+    root.data = API(commandLineArgs);
 
     ## Setup Environment
-    if args.env == "PROD":
-        cherrypy.config.update({'environment': 'production',
-                                'log.error_file': 'site.log',
-                                'server.socket_port': 61337});
+    if commandLineArgs.env == "prod":
+        cherrypy.config.update({"environment": "production",
+                                "log.error_file": "site.log",
+                                "server.socket_port": 61337});
         cherrypy.engine.redirectexceptions = RedirectExceptions(cherrypy.engine);
         cherrypy.engine.redirectexceptions.subscribe();
 
