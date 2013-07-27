@@ -5,8 +5,8 @@ import torConstants
 
 def torStart(xcitedbyUser, numTorInstances):
 
-    torExecutableAbsolutePath = "/Users/" + xcitedbyUser + "/xcitedby/TorBrowser_en-US.app/Contents/MacOS/tor"
-    torTmpAbsolutePath        = "/Users/" + xcitedbyUser + "/xcitedby/tmp/tor/"
+    torExecutableAbsolutePath = "/Users/" + xcitedbyUser + "/.xcitedby/TorBrowser_en-US.app/Contents/MacOS/tor"
+    torTmpAbsolutePath        = "/Users/" + xcitedbyUser + "/.xcitedby/tmp/tor/"
     torDataAbsoluteBasePath   = torTmpAbsolutePath + "data/"
     torPidAbsolutePath        = torTmpAbsolutePath + "pid/"
 
