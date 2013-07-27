@@ -20,7 +20,7 @@ else
 
 	if [ "$1" == "NOTERM" ]
 	then
-		`$COMMAND` &
+		`$COMMAND >> stdout.log 2>> stderr.log < /dev/null` &
 	else
 		nohup $COMMAND >> stdout.log 2>> stderr.log < /dev/null &
 	fi
