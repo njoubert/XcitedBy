@@ -22,7 +22,7 @@ else
 	then
 		`$COMMAND` &
 	else
-		nohup $COMMAND > stdout.log 2> stderr.log < /dev/null &
+		nohup $COMMAND >> stdout.log 2>> stderr.log < /dev/null &
 	fi
 	PID=$!
 	echo $PID > $PID_FILE
