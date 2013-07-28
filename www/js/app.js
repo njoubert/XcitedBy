@@ -40,6 +40,11 @@ function LongPoller(url, options) {
 	this.separator = options.separator || "***SEP***"
 	this.url = url;
 
+
+	if (options.data && typeof options.data !== "string") {
+		this.url = this.url + "?" + jQuery.param(options.data, false);
+	}
+
 	this.timeout;
 	this.doneListeners = [];
 	this.packetListeners = [];
@@ -177,21 +182,24 @@ var paperDeetsTemplate;
 
 var confirm = function() {
 
-	displayFSM.transitionToState('waiting', 3000);
+	var titleToSearchFor = $("#input_title").val();
 
-	setTimeout(function() {
+	
+	var longPoller = new LongPoller("/data/getAllCitingPapersIncremental", {
+		data: {
+			title: titleToSearchFor
+		}
+	}).onPacket(function(packet) {
+		displayFSM.transitionToState('waiting', packet);
+	}).onDone(function(xhr) {
+		if (xhr.status == 200)
+			displayFSM.transitionToState('confirmSearch');
+	}).onError(function(xhr) {
+		displayFSM.transitionToState('error', {textStatus:xhr.status, errorThrown:"The server responded with an error"});
+	});
 
-		$('#example1').simple_datagrid({
-			data: [
-				["1", "23", "Liszt: A cool thing for cool people", "Z. Devito, N. Joubert", 2011, "SUPERCOMPUTING"],
-				["1", "5", "Mojo as a way to make more awesome even more awesome", "M. Roberts, G. Bobsquat, F. You", 2013, "Nature"],
-				["2", "2", "Liszt: A cool thing for cool people", "Z. Devito, N. Joubert", 2011, "SUPERCOMPUTING"]
-			]
-		});
-
-		displayFSM.transitionToState('showResults');
-
-	}, 3000);
+	longPoller.start();
+	
 
 	return false;
 
@@ -208,21 +216,6 @@ var submit = function() {
 		}
 
 		displayFSM.transitionToState('waiting');
-
-		/*
-		var longPoller = new LongPoller("/data/testLongPoll", {
-
-		}).onPacket(function(packet) {
-			displayFSM.transitionToState('waiting', packet);
-		}).onDone(function(xhr) {
-			if (xhr.status == 200)
-				displayFSM.transitionToState('confirmSearch');
-		}).onError(function(xhr) {
-			displayFSM.transitionToState('error', {textStatus:xhr.status, errorThrown:"The server responded with an error"});
-		});
-
-		longPoller.start();
-		*/ //
 
 		$.ajax("/data/getPaper", {
 
