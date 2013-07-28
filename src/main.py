@@ -4,12 +4,12 @@ import json
 import scholar
 import torScholar
 import dataCollector
+import torUtils
 
 import os
 import os.path
 import sys
 import time
-
 import argparse
 
 class API(object):
@@ -168,6 +168,9 @@ if __name__ == "__main__":
         print "Parsed commandline arguments:"
         print commandLineArgs
         print
+
+    ## Configure TOR utils
+    torUtils.torInitializeActiveInstanceIds(commandLineArgs)
 
     ## Configure server hierarchy
     root = Root()

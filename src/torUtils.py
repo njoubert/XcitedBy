@@ -1,5 +1,7 @@
 import os
 import os.path
+import datetime
+import random
 
 import torConstants
 
@@ -38,3 +40,27 @@ def torStop():
     command = "killall tor"
     print "[TORUTILS COMMAND] " + command
     os.system(command)
+
+
+
+_timeUntilInstanceIsActive = []
+
+def torInitializeActiveInstanceIds(commandLineArgs):
+    global _timeUntilInstanceIsActive
+    _timeUntilInstanceIsActive = [ None for i in range(commandLineArgs.numTorInstances)]
+
+def torMarkInstanceAsInactive(id):
+    global _timeUntilInstanceIsActive
+    _timeUntilInstanceIsActive[ id ] = datetime.datetime.now() + datetime.timedelta(minutes=5)
+
+def torUpdateActiveInstances():
+    global _timeUntilInstanceIsActive
+    newlyActiveIds = [ i for i in range(len(_timeUntilInstanceIsActive)) if _timeUntilInstanceIsActive[i] != None and _timeUntilInstanceIsActive[i] < datetime.datetime.now() ]
+    for newlyActiveId in newlyActiveIds:
+        _timeUntilInstanceIsActive[ newlyActiveId ] = None
+
+def torGetActiveInstanceIdsShuffled():
+    global _timeUntilInstanceIsActive
+    activeIds = [ i for i in range(len(_timeUntilInstanceIsActive)) if _timeUntilInstanceIsActive[i] == None ]
+    random.shuffle(activeIds)
+    return activeIds

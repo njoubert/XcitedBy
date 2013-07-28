@@ -11,6 +11,7 @@ import copy
 import socket
 import socks
 import socksipyhandler
+import torUtils
 import torConstants
 
 class TorScholarQuerier(scholar.ScholarQuerier):
@@ -62,36 +63,39 @@ class TorScholarQuerier(scholar.ScholarQuerier):
 
     def _tryUrlReadWithTor(self, url):
 
-        shuffledTorInstances = range(self.commandLineArgs.numTorInstances)
-        random.shuffle(shuffledTorInstances)
+        torUtils.torUpdateActiveInstances()
+        shuffledTorInstances = torUtils.torGetActiveInstanceIdsShuffled()
 
         for i in shuffledTorInstances:
 
             try:
                 socket.setdefaulttimeout(2)
 
-                determine_public_facing_ip_url             = "http://www.networksecuritytoolkit.org/nst/tools/ip.php"
-                determine_public_facing_ip_source_no_proxy = urllib.urlopen(determine_public_facing_ip_url).read()
+                #determine_public_facing_ip_url             = "http://www.networksecuritytoolkit.org/nst/tools/ip.php"
+                #determine_public_facing_ip_source_no_proxy = urllib.urlopen(determine_public_facing_ip_url).read()
 
                 socksPort                         = torConstants.TOR_BASE_SOCKS_PORT + i
                 opener                            = urllib2.build_opener(socksipyhandler.SocksiPyHandler(socks.PROXY_TYPE_SOCKS4, '127.0.0.1', socksPort))
                 opener.addheaders                 = [("User-agent", self.UA)]
-                determine_public_facing_ip_source = opener.open(determine_public_facing_ip_url).read()
 
-                if determine_public_facing_ip_source_no_proxy == determine_public_facing_ip_source:
-                    raise Exception                                                              \
-                        (                                                                      + \
-                            "[TORSCHOLAR ERROR] Public facing IP without TOR "                 + \
-                            "(" + determine_public_facing_ip_source_no_proxy.strip("\n") + ")" + \
-                            " matches public facing IP with TOR"                               + \
-                            "(" + determine_public_facing_ip_source.strip("\n") + ")."
-                        )
+                #determine_public_facing_ip_source = opener.open(determine_public_facing_ip_url).read()
+
+                #if determine_public_facing_ip_source_no_proxy == determine_public_facing_ip_source:
+                #    raise Exception                                                              \
+                #        (                                                                      + \
+                #            "[TORSCHOLAR ERROR] Public facing IP without TOR "                 + \
+                #            "(" + determine_public_facing_ip_source_no_proxy.strip("\n") + ")" + \
+                #            " matches public facing IP with TOR"                               + \
+                #            "(" + determine_public_facing_ip_source.strip("\n") + ")."
+                #        )
 
                 return opener.open(url).read()
 
             except (urllib2.URLError, urllib2.HTTPError), e:
                 print "[TORSCHOLAR ERROR] urllib2 error: " + str(e)
+                torUtils.torMarkInstanceAsInactive(i)
             except Exception, e:
                 print "[TORSCHOLAR ERROR] Exception: " + str(e)
+                torUtils.torMarkInstanceAsInactive(i)
 
         raise Exception("[TORSCHOLAR ERROR] Couldn't connect to any TOR proxy.")
