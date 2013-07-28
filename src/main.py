@@ -93,7 +93,7 @@ class API(object):
 
                 yield                                                                 \
                     "Papers indexed: %s. Current graph traversal depth: %s. Number of duplicates removed: %s.***SEP***" % \
-                    (paper["numPapersProcessedCumulative"], paper["depth"], len(paperMessages) - paper["numPapersProcessedCumulative"])
+                    (paper["numPapersProcessedCumulative"], paper["depth"], paper["numDuplicatesRemoved"])
 
             message = {"papers": paperMessages}
 
