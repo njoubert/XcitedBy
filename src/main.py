@@ -21,12 +21,11 @@ class API(object):
     def getPaper(self, *args, **kwargs):
 
         paperTitle = kwargs["title"];
-
         cherrypy.response.headers["Content-Type"] = "application/json"
 
         if paperTitle:
 
-            querier   = torScholar.TorScholarQuerier(commandLineArgs)
+            querier   = torScholar.TorScholarQuerier(self.commandLineArgs)
             paperDict = dataCollector.getPaper(paperTitle, querier)
 
             if paperDict is not None:
@@ -42,19 +41,71 @@ class API(object):
                 return json.dumps(None)
 
         else:
+
             raise cherrypy.HTTPError(500, "You need to supply a paper title")
 
     @cherrypy.expose
     def getAllCitingPapers(self, *args, **kwargs):
 
-        message = {"papers": [{"title" : "haha", "authors":"zach", "venue": "siggraph", "year": "2011" }]}
+        paperTitle                                = kwargs["title"];
+        cherrypy.response.headers["Content-Type"] = "application/json"
+        querier                                   = torScholar.TorScholarQuerier(self.commandLineArgs)
+        papers                                    = dataCollector.getAllCitingPapers(paperTitle, querier)
+        paperMessages                             = []
+
+        for paper in papers:
+
+            paperMessage =                      \
+            {                                   \
+                "title"   : paperDict["title"], \
+                "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
+                "venue"   : "SC",
+                "year"    : paperDict["year"]
+            }
+
+            paperMessages.append(paperMessage)
+
+        message = {"papers": paperMessages}
         return json.dumps(message);
+
+    @cherrypy.expose
+    def getAllCitingPapersIncremental(self, *args, **kwargs):
+
+        def runCommand():
+
+            paperTitle                                = kwargs["title"];
+            cherrypy.response.headers["Content-Type"] = "application/json"
+            querier                                   = torScholar.TorScholarQuerier(self.commandLineArgs)
+            papers                                    = dataCollector.getAllCitingPapersIncremental(paperTitle, querier)
+            paperMessages                             = []
+
+            for paper in papers:
+
+                paperMessage =                  \
+                {                               \
+                    "title"   : paper["title"], \
+                    "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
+                    "venue"   : "SC",
+                    "year"    : paper["year"]
+                }
+
+                paperMessages.append(paperMessage)
+
+                yield                                                                 \
+                    "Papers indexed: %s. Current graph traversal depth: %s. Number of duplicates removed: %s.***SEP***" % \
+                    (paper["numPapersProcessedCumulative"], paper["depth"], len(paperMessages) - paper["numPapersProcessedCumulative"])
+
+            message = {"papers": paperMessages}
+
+            yield "Done***SEP***"
+            yield "%s***SEP***" % json.dumps(message);                
+
+        return runCommand();
 
     @cherrypy.expose
     def testLongPoll(self, *args, **kwargs):
         
-
-        def run_command():
+        def runCommand():
             start = 0
             while start < 5000:
                 yield "Papers indexed: %s***SEP***" % start
@@ -72,7 +123,7 @@ class API(object):
             yield "Done***SEP***"
             yield "%s***SEP***" % json.dumps(message);                
 
-        return run_command()
+        return runCommand()
 
 class Root():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -109,7 +160,7 @@ if __name__ == "__main__":
                         default="dev", help="Either dev for development (default) or prod for production.")
     parser.add_argument("--numTorInstances", dest="numTorInstances", type=int, action="store",
                        default=4,
-                       help="The number of tor instances to launch.")
+                       help="The number of TOR instances to launch.")
     commandLineArgs = parser.parse_args()
 
     if commandLineArgs.env == "dev":

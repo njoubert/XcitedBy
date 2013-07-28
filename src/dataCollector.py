@@ -37,7 +37,7 @@ def getAllCitingPapers(papertitle, querier=scholar.ScholarQuerier()):
 
         if (paper["papernumber"]):
 
-            print "[DATA COLLECTOR INFO] " + paper["title"]
+            print "[DATA COLLECTOR INFO] Found paper: " + paper["title"]
 
             newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
 
@@ -46,3 +46,36 @@ def getAllCitingPapers(papertitle, querier=scholar.ScholarQuerier()):
                     toCheckPapers.append((art,depth+1))
 
     return allPapers
+
+def getAllCitingPapersIncremental(papertitle, querier=scholar.ScholarQuerier()):
+
+    numPapersProcessedCumulative          = 1
+    paper                                 = getPaper(papertitle, querier)
+    paper["depth"]                        = 0
+    paper["numPapersProcessedCumulative"] = numPapersProcessedCumulative
+    allPapers                             = dict()
+    toCheckPapers                         = [paper]
+
+    while (len(toCheckPapers) > 0):
+
+        paper = toCheckPapers.pop(0)
+
+        if not paper["title"] in allPapers:
+
+            print "[DATA COLLECTOR INFO] Found paper: " + paper["title"]
+            allPapers[paper["title"]] = paper
+
+            yield paper
+
+            if (paper["papernumber"]):
+
+                newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
+
+                for art in newCitations:
+
+                    numPapersProcessedCumulative = numPapersProcessedCumulative + 1
+                    
+                    if not art["title"] in allPapers:
+                        art["depth"]                        = paper["depth"] + 1
+                        art["numPapersProcessedCumulative"] = numPapersProcessedCumulative
+                        toCheckPapers.append(art)

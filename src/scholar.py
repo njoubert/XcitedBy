@@ -376,11 +376,17 @@ class ScholarQuerier():
         return True
 
 def papers_by_title(title, querier=ScholarQuerier()):
+    
+    querier.articles = []
+
     querier.title(title)
     return querier.articles
 
 def citations_by_papernr(papernr, querier=ScholarQuerier()):
+
     i = 0
+    querier.articles = []
+
     while (querier.citation(papernr,i)):
         time.sleep(1)
         i += 1
