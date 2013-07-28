@@ -183,14 +183,19 @@ var paperDeetsTemplate;
 var confirm = function() {
 
 	var titleToSearchFor = $("#input_title").val();
-
 	
 	var longPoller = new LongPoller("/data/getAllCitingPapersIncremental", {
 		data: {
 			title: titleToSearchFor
 		}
 	}).onPacket(function(packet) {
+		
+		console.log("Packet:", packet);
+
 		displayFSM.transitionToState('waiting', packet);
+
+
+
 	}).onDone(function(xhr) {
 		if (xhr.status == 200)
 			displayFSM.transitionToState('confirmSearch');
@@ -199,7 +204,7 @@ var confirm = function() {
 	});
 
 	longPoller.start();
-	
+	displayFSM.transitionToState('waiting', "Firing up Google Scholar Scrapers");
 
 	return false;
 
