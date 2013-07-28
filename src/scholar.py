@@ -282,10 +282,10 @@ class ScholarQuerier():
     articles found are collected in the articles member, a list of
     Article instances.
     """
-    SCHOLAR_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s+author:%(author)s&btnG=Search&as_subj=eng&as_sdt=1,5&as_ylo=&as_vis=0'
-    NOAUTH_URL = 'http://scholar.google.com/scholar?hl=en&q=%(query)s&btnG=Search&as_subj=eng&as_std=1,5&as_ylo=&as_vis=0'
-    CITATION_URL = 'http://scholar.google.com/scholar?start=%(start)s&hl=en&as_sdt=0,5&sciodt=0,5&cites=%(papernr)s&scipsc='
-    TITLE_URL = 'http://scholar.google.com/scholar?q=allintitle:+%(title)s'
+    SCHOLAR_URL = 'http://scholar.google.com/scholar?num=20&hl=en&as_sdt=5,39&sciodt=0,39&q=%(query)s+author:%(author)s&btnG=Search&as_subj=eng&as_ylo=&as_vis=0'
+    NOAUTH_URL = 'http://scholar.google.com/scholar?num=20&hl=en&as_sdt=5,39&sciodt=0,39&q=%(query)s&btnG=Search&as_subj=eng&as_std=1,5&as_ylo=&as_vis=0'
+    CITATION_URL = 'http://scholar.google.com/scholar?num=20&hl=en&as_sdt=5,39&sciodt=0,39&start=%(start)s&cites=%(papernr)s&scipsc='
+    TITLE_URL = 'http://scholar.google.com/scholar?num=20&hl=en&as_sdt=5,39&sciodt=0,39&q=allintitle:+%(title)s'
 
 
     """
@@ -293,7 +293,28 @@ class ScholarQuerier():
     http://scholar.google.com/scholar?q=%s&hl=en&btnG=Search&as_sdt=2001&as_sdtp=on
     """
 
-    UA = 'Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9'
+    UA = \
+    [    \
+        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.2 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1468.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1467.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36",
+
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0",
+        "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:22.0) Gecko/20130328 Firefox/22.0",
+        "Mozilla/5.0 (Windows NT 6.1; rv:22.0) Gecko/20130405 Firefox/22.0",
+
+        "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/534.55.3 (KHTML, like Gecko) Version/5.1.3 Safari/534.53.10",
+        "Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko ) Version/5.1 Mobile/9B176 Safari/7534.48.3",
+
+        "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14",
+        "Mozilla/5.0 (Windows NT 6.0; rv:2.0) Gecko/20100101 Firefox/4.0 Opera 12.14",
+        "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0) Opera 12.14",
+        "Opera/12.80 (Windows NT 5.1; U; en) Presto/2.10.289 Version/12.02",
+    ]
 
     class Parser(ScholarParser120726):
         def __init__(self, querier):
@@ -323,10 +344,7 @@ class ScholarQuerier():
         response.
         """
         url = self.scholar_url % {'query': urllib.quote(search.encode('utf-8')), 'author': urllib.quote(self.author)}
-        req = urllib2.Request(url=url,
-                              headers={'User-Agent': self.UA})
-        hdl = urllib2.urlopen(req)
-        html = hdl.read()
+        html = self._tryReadUrl(url)
         self.parse(html)
 
     def title(self, search):
@@ -335,21 +353,15 @@ class ScholarQuerier():
         response.
         """
         url = self.TITLE_URL % {'title': urllib.quote(search.encode('utf-8'))}
-        req = urllib2.Request(url=url,
-                              headers={'User-Agent': self.UA})
-        hdl = urllib2.urlopen(req)
-        html = hdl.read()
+        html = self._tryReadUrl(url)
         return self.parse(html)
 
     def citation(self, citation, page):
         """
         This method initiates a single query to the citation list of a paper
         """
-        url = self.CITATION_URL % {'start': page*10, 'papernr': urllib.quote(citation)}
-        req = urllib2.Request(url=url,
-                              headers={'User-Agent': self.UA})
-        hdl = urllib2.urlopen(req)
-        html = hdl.read()
+        url = self.CITATION_URL % {'start': page*20, 'papernr': urllib.quote(citation)}
+        html = self._tryReadUrl(url)
         return self.parse(html)
 
     def direct(self, url):
@@ -357,11 +369,7 @@ class ScholarQuerier():
         This method initiates a query with subsequent parsing of the
         response.
         """
-        #url = urllib.quote(url)
-        req = urllib2.Request(url=url,
-                              headers={'User-Agent': self.UA})
-        hdl = urllib2.urlopen(req)
-        html = hdl.read()
+        html = self._tryReadUrl(url)
         self.parse(html)
 
     def parse(self, html):
@@ -374,6 +382,26 @@ class ScholarQuerier():
     def add_article(self, art):
         self.articles.append(art)
         return True
+
+    def _tryReadUrl(self, url):
+
+        try:
+
+            time.sleep(1)
+            req = urllib2.Request(url=url,
+                                  headers={'User-Agent': random.choice(self.UA)})
+            hdl = urllib2.urlopen(req)
+            return hdl.read()
+
+        except (urllib2.URLError, urllib2.HTTPError), e:
+
+            print "[SCHOLAR ERROR] URL:           " + url
+            print "[SCHOLAR ERROR] urllib2 error: " + str(e)
+
+        except Exception, e:
+
+            print "[SCHOLAR ERROR] URL:       " + url
+            print "[SCHOLAR ERROR] Exception: " + str(e)
 
 def papers_by_title(title, querier=ScholarQuerier()):
     
@@ -388,7 +416,6 @@ def citations_by_papernr(papernr, querier=ScholarQuerier()):
     querier.articles = []
 
     while (querier.citation(papernr,i)):
-        #time.sleep(1)
         i += 1
     return querier.articles
 

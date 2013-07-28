@@ -20,39 +20,14 @@ def getPaper(papertitle, querier=scholar.ScholarQuerier()):
 
         return None
 
-def getAllCitingPapers(papertitle, querier=scholar.ScholarQuerier()):
-
-    paper         = getPaper(papertitle, querier)
-    allPapers     = dict()
-    toCheckPapers = [(paper,0)]
-
-    while (len(toCheckPapers) > 0):
-
-        paper, depth = toCheckPapers.pop(0)
-
-        if (paper["title"] in allPapers):
-            continue
-
-        allPapers[paper["title"]] = (paper, depth)
-
-        if (paper["papernumber"]):
-
-            print "[DATA COLLECTOR INFO] Found paper: " + paper["title"]
-
-            newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
-
-            for art in newCitations:
-                if (not (art["title"] in allPapers)):
-                    toCheckPapers.append((art,depth+1))
-
-    return allPapers
-
 def getAllCitingPapersIncremental(papertitle, querier=scholar.ScholarQuerier()):
 
-    numPapersProcessedCumulative          = 1
     paper                                 = getPaper(papertitle, querier)
+    numPapersProcessedCumulative          = 1
+    numDuplicatesRemoved                  = 0
     paper["depth"]                        = 0
     paper["numPapersProcessedCumulative"] = numPapersProcessedCumulative
+    paper["numDuplicatesRemoved"]         = numDuplicatesRemoved
     allPapers                             = dict()
     toCheckPapers                         = [paper]
 
@@ -60,22 +35,26 @@ def getAllCitingPapersIncremental(papertitle, querier=scholar.ScholarQuerier()):
 
         paper = toCheckPapers.pop(0)
 
-        if not paper["title"] in allPapers:
+        if paper["title"] in allPapers:
+
+            numDuplicatesRemoved = numDuplicatesRemoved + 1
+
+        else:
 
             print "[DATA COLLECTOR INFO] Found paper: " + paper["title"]
-            allPapers[paper["title"]] = paper
+
+            paper["numPapersProcessedCumulative"] = numPapersProcessedCumulative
+            paper["numDuplicatesRemoved"]         = numDuplicatesRemoved
+            allPapers[paper["title"]]             = paper
 
             yield paper
 
             if (paper["papernumber"]):
 
-                newCitations = scholar.citations_by_papernr(paper["papernumber"], querier)
+                newCitations                 = scholar.citations_by_papernr(paper["papernumber"], querier)
+                numPapersProcessedCumulative = numPapersProcessedCumulative + len(newCitations)
 
                 for art in newCitations:
-
-                    numPapersProcessedCumulative = numPapersProcessedCumulative + 1
                     
-                    if not art["title"] in allPapers:
-                        art["depth"]                        = paper["depth"] + 1
-                        art["numPapersProcessedCumulative"] = numPapersProcessedCumulative
-                        toCheckPapers.append(art)
+                    art["depth"] = paper["depth"] + 1
+                    toCheckPapers.append(art)

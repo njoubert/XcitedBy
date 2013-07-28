@@ -25,16 +25,16 @@ class API(object):
 
         if paperTitle:
 
-            querier   = torScholar.TorScholarQuerier(self.commandLineArgs)
-            paperDict = dataCollector.getPaper(paperTitle, querier)
+            querier = torScholar.TorScholarQuerier(self.commandLineArgs)
+            paper   = dataCollector.getPaper(paperTitle, querier)
 
-            if paperDict is not None:
+            if paper is not None:
                 message =                           \
                 {                                   \
-                    "title"   : paperDict["title"], \
+                    "title"   : paper["title"], \
                     "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
                     "venue"   : "SC",
-                    "year"    : paperDict["year"]
+                    "year"    : paper["year"]
                 }
                 return json.dumps(message)
             else:
