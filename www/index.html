@@ -46,6 +46,13 @@
 </div>
 </script>
 
+<script id='tmpl-paperRow' type='text/template'>
+<div class="paper">
+<div class="paper_title">[<%= paper.year %>] <%= chopString(paper.title, 120) %></div>
+<div class="paper_authors"><%= chopString(paper.authors, 120) %> - <%= chopString(paper.venue, 20) %></div>
+</div>
+</script>
+
 </head>
 <body>
 
@@ -54,7 +61,7 @@
 	<div class="container">
 		<div class="row not-on-phone">
 			<div class="sixteen columns">
-		&nbsp
+		&nbsp <input type="checkbox" id="testToggle">TEST
 			</div>
 		</div>
 
@@ -134,18 +141,10 @@
 				</div>
 				<div id="resultsData">
 					<h3>results</h3>
-					<table id="example1">
-						<thead>
-							<tr>
-								<th>Distance</th>
-								<th>Citations</th>
-								<th>Title</th>
-								<th>Authors</th>
-								<th>Year</th>
-								<th>Venue</th>
-							</tr>
-						</thead>
-					</table>
+					<div id="resultsPartialSpinner"><img src="images/ajax-loader-small.gif"/></div>
+					<div id="resultsMetadata" class="smallText"></div>
+					<div id="resultsDownload" class="smallText"><a href="#">Download results as JSON</a></div>
+					<div id="resultsTable"></div>
 				</div>
 			</div>	
 		</div>

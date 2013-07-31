@@ -17,6 +17,9 @@ class API(object):
     def __init__(self, commandLineArgs):
         self.commandLineArgs = commandLineArgs
 
+    def packetize(self, string):
+        return ("%s***SEP***" % string)
+
     @cherrypy.expose
     def getPaper(self, *args, **kwargs):
 
@@ -50,7 +53,7 @@ class API(object):
         paperTitle                                = kwargs["title"];
         cherrypy.response.headers["Content-Type"] = "application/json"
         querier                                   = torScholar.TorScholarQuerier(self.commandLineArgs)
-        papers                                    = dataCollector.getAllCitingPapers(paperTitle, querier)
+        papers                                    = dataCollector.getAllCitingPapers(paperTitle)
         paperMessages                             = []
 
         for paper in papers:
@@ -76,7 +79,7 @@ class API(object):
             paperTitle                                = kwargs["title"];
             cherrypy.response.headers["Content-Type"] = "application/json"
             querier                                   = torScholar.TorScholarQuerier(self.commandLineArgs)
-            papers                                    = dataCollector.getAllCitingPapersIncremental(paperTitle, querier)
+            papers                                    = dataCollector.getAllCitingPapersIncremental(paperTitle)
             paperMessages                             = []
 
             for paper in papers:
@@ -91,39 +94,37 @@ class API(object):
 
                 paperMessages.append(paperMessage)
 
-                yield                                                                 \
-                    "Papers indexed: %s. Current graph traversal depth: %s. Number of duplicates removed: %s.***SEP***" % \
-                    (paper["numPapersProcessedCumulative"], paper["depth"], paper["numDuplicatesRemoved"])
 
-            message = {"papers": paperMessages}
+                partialMessage = \
+                { \
+                    "type":"partial", \
+                    "paper": paperMessage, \
+                    "stats": { \
+                        "indexed": paper["numPapersProcessedCumulative"], \
+                        "depth": paper["depth"], \
+                        "duplicates": len(paperMessages) - paper["numPapersProcessedCumulative"], \
+                    }, \
+                }
 
-            yield "Done***SEP***"
-            yield "%s***SEP***" % json.dumps(message);                
+                yield self.packetize(json.dumps(partialMessage));
 
-        return runCommand();
-
-    @cherrypy.expose
-    def testLongPoll(self, *args, **kwargs):
-        
-        def runCommand():
-            start = 0
-            while start < 5000:
-                yield "Papers indexed: %s***SEP***" % start
-                time.sleep(0.1);
-                start += 5;
-
-            message =                           \
-            {                                   \
-                "title"   : paperDict["title"], \
-                "authors" : "Z. DeVito, N. Joubert, F. Palacios, S. Oakley, M. Medina, M. Barrientos, E. Elsen, F. Ham, A. Aiken, K. Duraisamy, E. Darve, J. Alonso, P. Hanrahan", \
-                "venue"   : "SC",
-                "year"    : paperDict["year"]
+            doneMessage = \
+            { \
+                "type":"meta",
+                "data":"done"
             }
 
-            yield "Done***SEP***"
-            yield "%s***SEP***" % json.dumps(message);                
+            yield self.packetize(json.dumps(doneMessage))
 
-        return runCommand()
+            resultMessage = \
+            { \
+                "type":"result",
+                "papers": paperMessages
+            }
+
+            yield self.packetize(json.dumps(resultMessage));
+
+        return runCommand();
 
 class Root():
     current_dir = os.path.dirname(os.path.abspath(__file__))
